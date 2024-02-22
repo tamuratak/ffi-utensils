@@ -3,6 +3,7 @@ use crate::availability::get_platform_availability;
 use crate::typ::Typ;
 
 mod entry;
+mod vardecl;
 pub use entry::{Entry, EnumConstantDecl, FieldDecl, ObjCMethodDecl, ObjCPropertyDecl, ParmDecl, TemplateTypeParameter, RootEntry};
 
 

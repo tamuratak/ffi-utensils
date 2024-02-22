@@ -10,7 +10,6 @@ mod attributes;
 mod availability;
 mod entity;
 mod typ;
-mod vardecl;
 
 type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
