@@ -1,6 +1,6 @@
 use crate::attributes::ObjCAttributes;
 use crate::availability::{AvailabilityDef, PlatformAvailability};
-use crate::typ::Type;
+use crate::typ::Typ;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 pub enum Entry {
     TypedefDecl {
         name: String,
-        objc_type: Type,
+        objc_type: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
@@ -16,14 +16,14 @@ pub enum Entry {
     EnumDecl {
         decls: Vec<EnumConstantDecl>,
         name: String,
-        objc_type: Type,
+        objc_type: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
     },
     VarDecl {
         name: String,
-        objc_type: Type,
+        objc_type: Typ,
         value: Option<String>,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
@@ -32,16 +32,16 @@ pub enum Entry {
     StructDecl {
         fields: Vec<FieldDecl>,
         name: String,
-        objc_type: Type,
+        objc_type: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
     },
     FunctionDecl {
         name: String,
-        objc_type: Type,
+        objc_type: Typ,
         arguments: Vec<ParmDecl>,
-        result_type: Type,
+        result_type: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
@@ -64,7 +64,7 @@ pub enum Entry {
 pub struct ObjCMethodDecl {
     pub name: String,
     pub arguments: Vec<ParmDecl>,
-    pub result_type: Type,
+    pub result_type: Typ,
     pub platform_availability: Option<Vec<PlatformAvailability>>,
     #[serde(with = "AvailabilityDef")]
     pub availability: clang::Availability,
@@ -73,7 +73,7 @@ pub struct ObjCMethodDecl {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ObjCPropertyDecl {
     pub name: String,
-    pub objc_type: Type,
+    pub objc_type: Typ,
     pub attributes: Option<ObjCAttributes>,
     pub platform_availability: Option<Vec<PlatformAvailability>>,
     #[serde(with = "AvailabilityDef")]
@@ -83,7 +83,7 @@ pub struct ObjCPropertyDecl {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ParmDecl {
     pub name: String,
-    pub objc_type: Type,
+    pub objc_type: Typ,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -96,13 +96,13 @@ pub struct TemplateTypeParameter {
 pub struct EnumConstantDecl {
     pub name: String,
     pub value: Option<String>,
-    pub objc_type: Type,
+    pub objc_type: Typ,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FieldDecl {
     pub name: String,
-    pub objc_type: Type,
+    pub objc_type: Typ,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

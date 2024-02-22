@@ -23,14 +23,14 @@ impl Nullability {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "kind")]
-pub enum Type {
+pub enum Typ {
     Pointer {
         name: String,
         #[serde(with = "TypeKindDef")]
         clang_kind: clang::TypeKind,
         nullability: Option<Nullability>,
         objc_encoding: Option<String>,
-        pointee_type: Box<Type>,
+        pointee_type: Box<Typ>,
         is_const: bool,
     },
     FunctionPrototype {
@@ -40,8 +40,8 @@ pub enum Type {
         nullability: Option<Nullability>,
         objc_encoding: Option<String>,
         is_const: bool,
-        argument_types: Option<Vec<Type>>,
-        result_type: Option<Box<Type>>,
+        argument_types: Option<Vec<Typ>>,
+        result_type: Option<Box<Typ>>,
     },
     CArray {
         name: String,
@@ -49,7 +49,7 @@ pub enum Type {
         clang_kind: clang::TypeKind,
         nullability: Option<Nullability>,
         objc_encoding: Option<String>,
-        element_type: Box<Type>,
+        element_type: Box<Typ>,
         size: Option<usize>,
         is_const: bool,
     },
@@ -59,7 +59,7 @@ pub enum Type {
         clang_kind: clang::TypeKind,
         nullability: Option<Nullability>,
         objc_encoding: Option<String>,
-        objc_type_arguments: Vec<Type>,
+        objc_type_arguments: Vec<Typ>,
         is_const: bool,
     },
     OtherType {
@@ -72,7 +72,7 @@ pub enum Type {
     },
 }
 
-impl Type {
+impl Typ {
     pub fn from(ty: clang::Type) -> Self {
         let name = ty.get_display_name();
         let nullability = ty.get_nullability().map(|n| Nullability::from(n));
@@ -99,7 +99,7 @@ impl Type {
                 objc_encoding,
                 pointee_type: ty
                     .get_pointee_type()
-                    .map(|t| Box::new(Type::from(t)))
+                    .map(|t| Box::new(Typ::from(t)))
                     .unwrap(),
                 is_const,
             },
@@ -112,8 +112,8 @@ impl Type {
                     is_const,
                     argument_types: ty
                         .get_argument_types()
-                        .map(|t| t.iter().map(|t| Type::from(*t)).collect()),
-                    result_type: ty.get_result_type().map(|t| Box::new(Type::from(t))),
+                        .map(|t| t.iter().map(|t| Typ::from(*t)).collect()),
+                    result_type: ty.get_result_type().map(|t| Box::new(Typ::from(t))),
                 }
             }
             TypeKind::ConstantArray
@@ -124,7 +124,7 @@ impl Type {
                 clang_kind,
                 nullability,
                 objc_encoding,
-                element_type: Box::new(Type::from(ty.get_element_type().unwrap())),
+                element_type: Box::new(Typ::from(ty.get_element_type().unwrap())),
                 size: ty.get_size(),
                 is_const,
             },
@@ -141,7 +141,7 @@ impl Type {
                 objc_type_arguments: ty
                     .get_objc_type_arguments()
                     .iter()
-                    .map(|t| Type::from(*t))
+                    .map(|t| Typ::from(*t))
                     .collect(),
                 is_const,
             },

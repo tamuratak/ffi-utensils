@@ -1,6 +1,6 @@
 use crate::attributes::ObjCAttributes;
 use crate::availability::get_platform_availability;
-use crate::typ::Type;
+use crate::typ::Typ;
 
 mod entry;
 pub use entry::{Entry, EnumConstantDecl, FieldDecl, ObjCMethodDecl, ObjCPropertyDecl, ParmDecl, TemplateTypeParameter, RootEntry};
@@ -20,7 +20,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
             name,
             objc_type: entity
                 .get_typedef_underlying_type()
-                .map(|t| Type::from(t))
+                .map(|t| Typ::from(t))
                 .unwrap(),
             platform_availability,
             availability,
@@ -45,7 +45,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
                     decls.push(EnumConstantDecl {
                         name: e.get_name().unwrap(),
                         value,
-                        objc_type: Type::from(e.get_type().unwrap()),
+                        objc_type: Typ::from(e.get_type().unwrap()),
                     });
                 }
             });
@@ -55,7 +55,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
             Some(Entry::EnumDecl {
                 decls,
                 name,
-                objc_type: Type::from(entity.get_enum_underlying_type().unwrap()),
+                objc_type: Typ::from(entity.get_enum_underlying_type().unwrap()),
                 platform_availability,
                 availability,
             })
@@ -64,7 +64,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
             let value = entity.evaluate();
             Some(Entry::VarDecl {
                 name,
-                objc_type: Type::from(entity.get_type().unwrap()),
+                objc_type: Typ::from(entity.get_type().unwrap()),
                 value: Some("aaa".to_string()),
                 platform_availability,
                 availability,
@@ -78,7 +78,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
                     if let clang::EntityKind::FieldDecl = e.get_kind() {
                         Some(FieldDecl {
                             name: e.get_name().unwrap(),
-                            objc_type: Type::from(e.get_type().unwrap()),
+                            objc_type: Typ::from(e.get_type().unwrap()),
                         })
                     } else {
                         None
@@ -86,15 +86,15 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
                 })
                 .collect(),
             name,
-            objc_type: Type::from(entity.get_type().unwrap()),
+            objc_type: Typ::from(entity.get_type().unwrap()),
             platform_availability,
             availability,
         }),
         clang::EntityKind::FunctionDecl => Some(Entry::FunctionDecl {
             name,
-            objc_type: Type::from(entity.get_type().unwrap()),
+            objc_type: Typ::from(entity.get_type().unwrap()),
             arguments: get_arguments(entity),
-            result_type: Type::from(entity.get_result_type().unwrap()),
+            result_type: Typ::from(entity.get_result_type().unwrap()),
             platform_availability,
             availability,
         }),
@@ -128,7 +128,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
                         let method = ObjCMethodDecl {
                             name: e.get_name().unwrap(),
                             arguments,
-                            result_type: Type::from(e.get_result_type().unwrap()),
+                            result_type: Typ::from(e.get_result_type().unwrap()),
                             platform_availability: get_platform_availability(e),
                             availability: e.get_availability(),
                         };
@@ -142,7 +142,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
                         let attributes = e.get_objc_attributes().map(|a| ObjCAttributes::from(a));
                         let property = ObjCPropertyDecl {
                             name: e.get_name().unwrap(),
-                            objc_type: Type::from(e.get_type().unwrap()),
+                            objc_type: Typ::from(e.get_type().unwrap()),
                             attributes,
                             platform_availability: get_platform_availability(e),
                             availability: e.get_availability(),
@@ -175,7 +175,7 @@ fn get_arguments(entity: &clang::Entity) -> Vec<ParmDecl> {
             if let clang::EntityKind::ParmDecl = arg.get_kind() {
                 arguments.push(ParmDecl {
                     name: arg.get_name().unwrap(),
-                    objc_type: Type::from(arg.get_type().unwrap()),
+                    objc_type: Typ::from(arg.get_type().unwrap()),
                 });
             }
         });
