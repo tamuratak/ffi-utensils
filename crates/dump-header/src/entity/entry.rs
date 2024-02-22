@@ -1,7 +1,8 @@
-use crate::attributes::ObjCAttributes;
-use crate::availability::{AvailabilityDef, PlatformAvailability};
+use crate::entity::attributes::ObjCAttributes;
 use crate::typ::Typ;
 use serde::{Deserialize, Serialize};
+
+use crate::entity::availability::{PlatformAvailability, AvailabilityDef};
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "kind")]

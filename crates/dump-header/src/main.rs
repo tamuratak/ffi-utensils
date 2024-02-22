@@ -6,8 +6,6 @@ use std::fs::File;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
-mod attributes;
-mod availability;
 mod entity;
 mod typ;
 

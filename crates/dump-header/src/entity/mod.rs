@@ -1,9 +1,12 @@
-use crate::attributes::ObjCAttributes;
-use crate::availability::get_platform_availability;
 use crate::typ::Typ;
 
+mod attributes;
+mod availability;
 mod entry;
 mod vardecl;
+
+use attributes::ObjCAttributes;
+use availability::get_platform_availability;
 pub use entry::{Entry, EnumConstantDecl, FieldDecl, ObjCMethodDecl, ObjCPropertyDecl, ParmDecl, TemplateTypeParameter, RootEntry};
 
 
