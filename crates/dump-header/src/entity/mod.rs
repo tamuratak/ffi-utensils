@@ -65,7 +65,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
             })
         }
         clang::EntityKind::VarDecl => {
-            let value = entity.evaluate();
+//            let value = entity.evaluate();
             Some(Entry::VarDecl {
                 name,
                 objc_type: Typ::from(entity.get_type().unwrap()),

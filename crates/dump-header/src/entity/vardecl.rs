@@ -1,5 +1,6 @@
-use clang::Entity;
+// use clang::Entity;
 
+/* 
 pub enum InitValue {
     Int(i64),
     UInt(u64),
@@ -14,3 +15,4 @@ pub enum InitValue {
 pub fn get_init_value(entity: clang::Entity) -> Option<InitValue> {
     None
 }
+*/
