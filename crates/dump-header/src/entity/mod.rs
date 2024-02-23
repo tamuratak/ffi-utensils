@@ -9,6 +9,8 @@ use attributes::ObjCAttributes;
 use availability::get_platform_availability;
 pub use entry::{Entry, EnumConstantDecl, FieldDecl, ObjCMethodDecl, ObjCPropertyDecl, ParmDecl, TemplateTypeParameter, RootEntry};
 
+use self::vardecl::get_init_expr;
+
 
 pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
     let name0 = entity.get_name();
@@ -65,11 +67,11 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
             })
         }
         clang::EntityKind::VarDecl => {
-//            let value = entity.evaluate();
+            let init_expr = get_init_expr(entity);
             Some(Entry::VarDecl {
                 name,
                 objc_type: Typ::from(entity.get_type().unwrap()),
-                value: Some("aaa".to_string()),
+                init_expr,
                 platform_availability,
                 availability,
             })

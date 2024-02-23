@@ -1,8 +1,8 @@
-use crate::entity::attributes::ObjCAttributes;
+use super::attributes::ObjCAttributes;
 use crate::typ::Typ;
 use serde::{Deserialize, Serialize};
 
-use crate::entity::availability::{PlatformAvailability, AvailabilityDef};
+use super::availability::{PlatformAvailability, AvailabilityDef};
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "kind")]
@@ -25,7 +25,7 @@ pub enum Entry {
     VarDecl {
         name: String,
         objc_type: Typ,
-        value: Option<String>,
+        init_expr: Option<InitExpr>,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
@@ -59,6 +59,33 @@ pub enum Entry {
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
     },
+}
+
+
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "kind")]
+pub enum InitExpr {
+    Value(InitValue),
+    InitListExpr(InitListExpr),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum InitValue {
+    Int(i64),
+    UInt(u64),
+    Float(f64),
+    String(String),
+    Bool(bool),
+    Array(Vec<InitValue>),
+    Struct(Vec<(String, InitValue)>),
+    Null,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+
+pub struct InitListExpr {
+    pub values: Vec<InitValue>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

@@ -1,46 +1,50 @@
-use clang::Entity;
+use super::entry::{InitExpr, InitListExpr, InitValue};
 
-pub enum InitExpr<'tu> {
-    Value(InitValue),
-    Entity(Entity<'tu>),
-}
 
-pub enum InitValue {
-    Int(i64),
-    UInt(u64),
-    Float(f64),
-    String(String),
-    Bool(bool),
-    Array(Vec<InitValue>),
-    Struct(Vec<(String, InitValue)>),
-    Null,
-}
-
-pub fn get_init_value(entity: clang::Entity) -> Option<InitExpr> {
-    if let Some(value) = entity.evaluate() {
-        match value {
-            clang::EvaluationResult::SignedInteger(value) => {
-                Some(InitExpr::Value(InitValue::Int(value)))
-            }
-            clang::EvaluationResult::UnsignedInteger(value) => {
-                Some(InitExpr::Value(InitValue::UInt(value)))
-            }
-            clang::EvaluationResult::Float(value) => Some(InitExpr::Value(InitValue::Float(value))),
-            clang::EvaluationResult::String(value)
-            | clang::EvaluationResult::ObjCString(value)
-            | clang::EvaluationResult::CFString(value)
-            | clang::EvaluationResult::Other(value) => Some(InitExpr::Value(InitValue::String(
-                value.to_string_lossy().to_string(),
-            ))),
-            _ => None,
-        }
+pub fn get_init_expr(entity: &clang::Entity) -> Option<InitExpr> {
+    if let Some(value) = evaluate(&entity) {
+        Some(InitExpr::Value(value))
     } else {
         entity.get_children().iter().find_map(|e| {
             if clang::EntityKind::InitListExpr == e.get_kind() {
-                Some(InitExpr::Entity(entity))
-            } else {
-                None
+                if let Some(init_list_expr) = get_init_list_expr(e) {
+                    return Some(InitExpr::InitListExpr(init_list_expr));
+                }
             }
+            None
         })
+    }
+}
+
+fn evaluate(entity: &clang::Entity) -> Option<InitValue> {
+    if let Some(value) = entity.evaluate() {
+        match value {
+            clang::EvaluationResult::SignedInteger(value) => Some(InitValue::Int(value)),
+            clang::EvaluationResult::UnsignedInteger(value) => Some(InitValue::UInt(value)),
+            clang::EvaluationResult::Float(value) => Some(InitValue::Float(value)),
+            clang::EvaluationResult::String(value)
+            | clang::EvaluationResult::ObjCString(value)
+            | clang::EvaluationResult::CFString(value)
+            | clang::EvaluationResult::Other(value) => {
+                Some(InitValue::String(value.to_string_lossy().to_string()))
+            }
+            _ => None,
+        }
+    } else {
+        None
+    }
+}
+
+fn get_init_list_expr(entity: &clang::Entity) -> Option<InitListExpr> {
+    let mut values = vec![];
+    entity.get_children().iter().for_each(|e| {
+        if let Some(value) = evaluate(e) {
+            values.push(value);
+        }
+    });
+    if values.is_empty() {
+        None
+    } else {
+        Some(InitListExpr { values })
     }
 }
