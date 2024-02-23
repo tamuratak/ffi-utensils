@@ -12,7 +12,7 @@ mod typ;
 type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 // TODO
-// - Elaborated type 
+// - Record type
 // - VarDecl
 // - VarDecl の InitListExpr
 
@@ -75,7 +75,7 @@ fn pretty_print_entity(entity: &clang::Entity, depth: usize) {
         "{:?} {:?} {:?} {:?}",
         entity.get_name(),
         entity.get_kind(),
-        entity.get_type(),
+        entity.get_type().map(|t| t.get_declaration().map(|e| e.get_name())),
         entity.get_canonical_entity().get_type()
     );
     entity.get_children().iter().for_each(|entity| {

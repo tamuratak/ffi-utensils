@@ -76,10 +76,12 @@ impl Typ {
     pub fn from(ty: clang::Type) -> Self {
         let name = ty.get_display_name();
         let nullability = ty.get_nullability().map(|n| Nullability::from(n));
-        if ty.get_kind() == TypeKind::Attributed {
-            Self::from_impl(ty.get_canonical_type(), name, nullability)
-        } else {
-            Self::from_impl(ty, name, nullability)
+        match ty.get_kind() {
+            TypeKind::Attributed | TypeKind::Elaborated => {
+                let canonical_ty = ty.get_canonical_type();
+                Self::from_impl(canonical_ty, name, nullability)
+            }
+            _ => Self::from_impl(ty, name, nullability),
         }
     }
 
