@@ -1,6 +1,5 @@
 use super::entry::{InitExpr, InitListExpr, InitValue};
 
-
 pub fn get_init_expr(entity: &clang::Entity) -> Option<InitExpr> {
     if let Some(value) = evaluate(&entity) {
         Some(InitExpr::Value(value))
