@@ -12,8 +12,6 @@ mod typ;
 type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 // TODO
-// - VarDecl
-// - VarDecl の InitListExpr
 
 fn main() -> Result<(), BoxError> {
     let args: Vec<String> = env::args().collect();
