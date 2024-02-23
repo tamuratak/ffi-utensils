@@ -7,11 +7,14 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 mod entity;
+mod collect_filepaths;
 mod typ;
+use collect_filepaths::collect_filepaths;
 
 type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 // TODO
+// - traverse files
 
 fn main() -> Result<(), BoxError> {
     let args: Vec<String> = env::args().collect();
@@ -60,6 +63,9 @@ fn main() -> Result<(), BoxError> {
             }
         }
     });
+    let mut vec: Vec<PathBuf> = collect_filepaths(&tu.get_entity()).iter().map(|p| p.clone()).collect();
+    vec.sort();
+    println!("len: {}", vec.len());
     call_save_to_file(&tu.get_entity(), &filename);
     Ok(())
 }
