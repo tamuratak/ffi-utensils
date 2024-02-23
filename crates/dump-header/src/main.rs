@@ -12,7 +12,6 @@ mod typ;
 type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 // TODO
-// - Record type
 // - VarDecl
 // - VarDecl の InitListExpr
 

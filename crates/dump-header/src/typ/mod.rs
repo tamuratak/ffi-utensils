@@ -53,6 +53,16 @@ pub enum Typ {
         size: Option<usize>,
         is_const: bool,
     },
+    Record {
+        name: String,
+        ident: String,
+        fields: Vec<(String, Typ)>,
+        #[serde(with = "TypeKindDef")]
+        clang_kind: clang::TypeKind,
+        nullability: Option<Nullability>,
+        objc_encoding: Option<String>,
+        is_const: bool,
+    },
     ObjC {
         name: String,
         #[serde(with = "TypeKindDef")]
@@ -130,6 +140,32 @@ impl Typ {
                 size: ty.get_size(),
                 is_const,
             },
+            TypeKind::Record => {
+                let ident = ty.get_declaration().unwrap().get_name().unwrap();
+                Self::Record {
+                    name,
+                    ident,
+                    fields: ty
+                        .get_declaration()
+                        .map(|e| {
+                            e.get_children()
+                                .iter()
+                                .filter_map(|e| {
+                                    if let clang::EntityKind::FieldDecl = e.get_kind() {
+                                        Some((e.get_name().unwrap(), Typ::from(e.get_type().unwrap())))
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .collect()
+                        })
+                        .unwrap(),
+                    clang_kind,
+                    nullability,
+                    objc_encoding,
+                    is_const,
+                }
+            }
             TypeKind::ObjCClass
             | TypeKind::ObjCId
             | TypeKind::ObjCInterface
