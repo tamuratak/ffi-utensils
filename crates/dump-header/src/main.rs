@@ -74,8 +74,8 @@ fn pretty_print_entity(entity: &clang::Entity, depth: usize) {
         "{:?} {:?} {:?} {:?}",
         entity.get_name(),
         entity.get_kind(),
-        entity.get_type().map(|t| t.get_declaration().map(|e| e.get_name())),
-        entity.get_canonical_entity().get_type()
+        entity.get_type(),
+        entity.evaluate()
     );
     entity.get_children().iter().for_each(|entity| {
         pretty_print_entity(entity, depth + 1);
