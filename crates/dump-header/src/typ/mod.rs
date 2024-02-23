@@ -146,20 +146,13 @@ impl Typ {
                     name,
                     ident,
                     fields: ty
-                        .get_declaration()
+                        .get_fields()
+                        .unwrap()
+                        .iter()
                         .map(|e| {
-                            e.get_children()
-                                .iter()
-                                .filter_map(|e| {
-                                    if let clang::EntityKind::FieldDecl = e.get_kind() {
-                                        Some((e.get_name().unwrap(), Typ::from(e.get_type().unwrap())))
-                                    } else {
-                                        None
-                                    }
-                                })
-                                .collect()
+                            (e.get_name().unwrap(), Typ::from(e.get_type().unwrap()))
                         })
-                        .unwrap(),
+                        .collect(),
                     clang_kind,
                     nullability,
                     objc_encoding,
