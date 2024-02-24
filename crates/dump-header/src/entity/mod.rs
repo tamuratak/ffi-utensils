@@ -23,11 +23,11 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
     let availability = entity.get_availability();
     match kind {
         clang::EntityKind::InclusionDirective => {
-            let path = entity.get_location().map(|sl| sl.get_file_location().file.map(|f| f.get_path()));
-            if let Some(Some(path)) = path {
+            let path: Option<std::path::PathBuf> = entity.get_file().map(|f| f.get_path());
+            if let Some(path) = path {
                 Some(Entry::InclusionDirective {
                     name,
-                    path,
+                    path
                 })
             } else {
                 None
