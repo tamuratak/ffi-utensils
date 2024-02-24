@@ -18,15 +18,21 @@ pub fn traverse<'tu>(entity: &clang::Entity<'tu>, filename: &PathBuf) -> Vec<Fil
     let mut vec = vec![];
     entity.get_children().iter().for_each(|e| {
         if clang::EntityKind::InclusionDirective == e.get_kind() {
-            if let Some(sl) = e.get_location() {
-                if let Some(f) = sl.get_file_location().file {
-                    if PathBuf::from(f.get_path()) == *filename {
-                        e.get_file().map(|f| vec.push(f));
-                    }
-                }
+            if is_in_file(e, filename) {
+                e.get_file().map(|f| vec.push(f));
             }
         }
     });
     vec
 }
 
+fn is_in_file(entity: &clang::Entity, filename: &PathBuf) -> bool {
+    if let Some(sl) = entity.get_location() {
+        if let Some(f) = sl.get_file_location().file {
+            if PathBuf::from(f.get_path()) == *filename {
+                return true;
+            }
+        }
+    }
+    false
+}
