@@ -4,14 +4,14 @@ use super::attributes::ObjCAttributes;
 use crate::typ::Typ;
 use serde::{Deserialize, Serialize};
 
-use super::availability::{PlatformAvailability, AvailabilityDef};
+use super::availability::{AvailabilityDef, PlatformAvailability};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "kind")]
 pub enum Entry {
     InclusionDirective {
         name: String,
-        path: PathBuf
+        path: PathBuf,
     },
     TypedefDecl {
         name: String,
@@ -67,16 +67,14 @@ pub enum Entry {
     },
 }
 
-
-
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "kind")]
 pub enum InitExpr {
     Value(InitValue),
     InitListExpr(InitListExpr),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum InitValue {
     Int(i64),
     UInt(u64),
@@ -88,13 +86,13 @@ pub enum InitValue {
     Null,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 
 pub struct InitListExpr {
     pub values: Vec<InitValue>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ObjCMethodDecl {
     pub name: String,
     pub arguments: Vec<ParmDecl>,
@@ -104,7 +102,7 @@ pub struct ObjCMethodDecl {
     pub availability: clang::Availability,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ObjCPropertyDecl {
     pub name: String,
     pub objc_type: Typ,
@@ -114,37 +112,33 @@ pub struct ObjCPropertyDecl {
     pub availability: clang::Availability,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ParmDecl {
     pub name: String,
     pub objc_type: Typ,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TemplateTypeParameter {
     pub name: String,
     pub constraint: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct EnumConstantDecl {
     pub name: String,
     pub value: Option<String>,
     pub objc_type: Typ,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FieldDecl {
     pub name: String,
     pub objc_type: Typ,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct RootEntry {
-    pub root: Vec<Entry>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HeaderFile {
-    root: Vec<Entry>,
+    pub entries: Vec<Box<Entry>>,
+    pub path: PathBuf,
 }

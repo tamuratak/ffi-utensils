@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 mod typekind;
 use typekind::TypeKindDef;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Nullability {
     NonNull = 0,
     Nullable = 1,
@@ -21,7 +21,7 @@ impl Nullability {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "kind")]
 pub enum Typ {
     Pointer {

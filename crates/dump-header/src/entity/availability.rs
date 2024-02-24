@@ -1,14 +1,14 @@
 use clang::Availability;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Version {
     pub x: u32,
     pub y: Option<u32>,
     pub z: Option<u32>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PlatformAvailability {
     pub platform: String,
     pub unavailable: bool,

@@ -1,5 +1,5 @@
 use clang::{Clang, Index};
-use entity::{convert_entity, RootEntry};
+use entity::{convert_entity, HeaderFile};
 use serde::Serialize;
 use std::env;
 use std::fs::File;
@@ -7,9 +7,9 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 mod entity;
-mod traverse;
+mod headerfiletree;
 mod typ;
-use traverse::collect_filepaths;
+use headerfiletree::collect_filepaths;
 
 type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -62,7 +62,7 @@ fn main() -> Result<(), BoxError> {
     let mut vec: Vec<PathBuf> = collect_filepaths(&tu.get_entity()).iter().map(|p| p.clone()).collect();
     vec.sort();
     println!("len: {}", vec.len());
-    println!("{:?}", traverse::traverse(&tu.get_entity(), &filename));
+    println!("{:?}", headerfiletree::traverse(&tu.get_entity(), &filename));
     call_save_to_file(&tu.get_entity(), &filename);
     Ok(())
 }
@@ -84,19 +84,19 @@ fn pretty_print_entity(entity: &clang::Entity, depth: usize) {
 }
 
 fn call_save_to_file(root: &clang::Entity, current_filename: &PathBuf) {
-    let mut root_entry = vec![];
-    root.get_children().iter().for_each(|entity| {
-        if let Some(sl) = entity.get_location() {
+    let mut entries = vec![];
+    root.get_children().iter().for_each(|e| {
+        if let Some(sl) = e.get_location() {
             if let Some(f) = sl.get_file_location().file {
                 if PathBuf::from(f.get_path()) == *current_filename {
-                    if let Some(entry) = convert_entity(entity) {
-                        root_entry.push(entry);
+                    if let Some(entry) = convert_entity(e) {
+                        entries.push(Box::new(entry));
                     }
                 }
             }
         }
     });
-    let entries = RootEntry { root: root_entry };
+    let entries = HeaderFile { entries, path: current_filename.clone() };
     save_to_file(&entries, "point.json").unwrap();
 }
 
