@@ -17,10 +17,8 @@ pub fn collect_filepaths(entity: &clang::Entity) -> HashSet<PathBuf> {
 pub fn traverse<'tu>(entity: &clang::Entity<'tu>, filename: &PathBuf) -> Vec<File<'tu>> {
     let mut vec = vec![];
     entity.get_children().iter().for_each(|e| {
-        if clang::EntityKind::InclusionDirective == e.get_kind() {
-            if is_in_file(e, filename) {
-                e.get_file().map(|f| vec.push(f));
-            }
+        if clang::EntityKind::InclusionDirective == e.get_kind() && is_in_file(e, filename) {
+            e.get_file().map(|f| vec.push(f));
         }
     });
     vec
