@@ -22,6 +22,17 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
     let platform_availability = get_platform_availability(entity);
     let availability = entity.get_availability();
     match kind {
+        clang::EntityKind::InclusionDirective => {
+            let path = entity.get_location().map(|sl| sl.get_file_location().file.map(|f| f.get_path()));
+            if let Some(Some(path)) = path {
+                Some(Entry::InclusionDirective {
+                    name,
+                    path,
+                })
+            } else {
+                None
+            }
+        },
         clang::EntityKind::TypedefDecl => Some(Entry::TypedefDecl {
             name,
             objc_type: entity

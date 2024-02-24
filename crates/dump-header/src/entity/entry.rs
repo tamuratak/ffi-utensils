@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use super::attributes::ObjCAttributes;
 use crate::typ::Typ;
 use serde::{Deserialize, Serialize};
@@ -7,6 +9,10 @@ use super::availability::{PlatformAvailability, AvailabilityDef};
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "kind")]
 pub enum Entry {
+    InclusionDirective {
+        name: String,
+        path: PathBuf
+    },
     TypedefDecl {
         name: String,
         objc_type: Typ,
