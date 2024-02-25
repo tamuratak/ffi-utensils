@@ -6,10 +6,12 @@ use std::fs::File;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
+use crate::headerfiletree::create_header_file_tree;
+
 mod entity;
 mod headerfiletree;
 mod typ;
-use headerfiletree::collect_filepaths;
+
 
 type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -59,10 +61,8 @@ fn main() -> Result<(), BoxError> {
             pretty_print_entity(entity, 0);
         }
     });
-    let mut vec: Vec<PathBuf> = collect_filepaths(&tu.get_entity()).iter().map(|p| p.clone()).collect();
-    vec.sort();
-    println!("len: {}", vec.len());
     println!("{:?}", headerfiletree::traverse(&tu.get_entity(), &filename));
+    println!("{:?}", create_header_file_tree(&tu.get_entity(), &filename));
     call_save_to_file(&tu.get_entity(), &filename);
     Ok(())
 }
@@ -90,7 +90,7 @@ fn call_save_to_file(root: &clang::Entity, current_filename: &PathBuf) {
             if let Some(f) = sl.get_file_location().file {
                 if PathBuf::from(f.get_path()) == *current_filename {
                     if let Some(entry) = convert_entity(e) {
-                        entries.push(Box::new(entry));
+                        entries.push(entry);
                     }
                 }
             }
