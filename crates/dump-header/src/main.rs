@@ -18,8 +18,7 @@ use headerfiletree::get_file_location_path;
 type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 // TODO
-// - Add memo to Typ::from. recursive type causes segfault.
-//   RecordIdent 
+
 
 fn main() -> Result<(), BoxError> {
     let args: Vec<String> = env::args().collect();
