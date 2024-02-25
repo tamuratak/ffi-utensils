@@ -42,7 +42,6 @@ pub fn create_header_file_tree(
     root_filepath: &PathBuf,
 ) -> Option<Rc<RefCell<HeaderFileNode>>> {
     let mut path_entry_hash_map: HashMap<PathBuf, Rc<RefCell<HeaderFileNode>>> = HashMap::new();
-    println!("aaa");
     root_entity.get_children().iter().for_each(|e| {
         if let Some(path) = get_file_location_path(e) {
             if path_entry_hash_map.get(&path).is_none() {
@@ -67,7 +66,6 @@ pub fn create_header_file_tree(
                 .iter()
                 .for_each(|(_, path)| {
                     if let Some(child) = path_entry_hash_map.get(path) {
-                        println!("aaa {:?}", child);
                         header_file_node.borrow_mut().children.push(child.clone());
                     }
                 })
