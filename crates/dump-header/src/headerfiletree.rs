@@ -29,7 +29,9 @@ pub fn create_hedear_file_entry(
     let mut entries = vec![];
     all_entries.iter().for_each(|e| {
         if is_in_file(e, filename) {
+            println!("bbb0 {:?}", e);
             if let Some(entry) = convert_entity(e) {
+                println!("bbb {:?}", e);
                 entries.push(entry);
             }
         }
