@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::rc::Rc;
 
@@ -23,12 +23,12 @@ impl HeaderFileNode {
 }
 
 pub fn create_hedear_file_entry(
-    root_entity: &clang::Entity,
+    all_entries: &Vec<clang::Entity>,
     filename: &PathBuf,
 ) -> super::HeaderFile {
     let mut entries = vec![];
-    root_entity.get_children().iter().for_each(|e| {
-        if is_in_file(root_entity, filename) {
+    all_entries.iter().for_each(|e| {
+        if is_in_file(e, filename) {
             if let Some(entry) = convert_entity(e) {
                 entries.push(entry);
             }
@@ -45,10 +45,16 @@ pub fn create_header_file_tree(
     root_filepath: &PathBuf,
 ) -> Option<Rc<RefCell<HeaderFileNode>>> {
     let mut path_entry_hash_map: HashMap<PathBuf, Rc<RefCell<HeaderFileNode>>> = HashMap::new();
+    println!("aaa");
     root_entity.get_children().iter().for_each(|e| {
         if let Some(path) = get_file_location_path(e) {
             if path_entry_hash_map.get(&path).is_none() {
-                let header_file_node = HeaderFileNode::new(create_hedear_file_entry(e, &path));
+                println!("{:?}", path);
+                let header_file_node = HeaderFileNode::new(create_hedear_file_entry(
+                    &root_entity.get_children(),
+                    &path,
+                ));
+                println!("aaa");
                 path_entry_hash_map.insert(path.clone(), Rc::new(RefCell::new(header_file_node)));
             }
         }
@@ -66,6 +72,7 @@ pub fn create_header_file_tree(
                 .iter()
                 .for_each(|(_, path)| {
                     if let Some(child) = path_entry_hash_map.get(path) {
+                        println!("aaa {:?}", child);
                         header_file_node.borrow_mut().children.push(child.clone());
                     }
                 })
@@ -84,17 +91,12 @@ pub fn traverse<'tu>(entity: &clang::Entity<'tu>, filename: &PathBuf) -> Vec<Fil
 }
 
 fn is_in_file(entity: &clang::Entity, filename: &PathBuf) -> bool {
-    if let Some(sl) = entity.get_location() {
-        if let Some(f) = sl.get_file_location().file {
-            if PathBuf::from(f.get_path()) == *filename {
-                return true;
-            }
-        }
-    }
-    false
+    get_file_location_path(entity)
+        .map(|p| p == *filename)
+        .unwrap_or(false)
 }
 
-fn get_file_location_path(entity: &clang::Entity) -> Option<PathBuf> {
+pub fn get_file_location_path(entity: &clang::Entity) -> Option<PathBuf> {
     entity
         .get_location()
         .map(|sl| sl.get_file_location().file.map(|f| f.get_path()))

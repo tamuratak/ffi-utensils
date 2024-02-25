@@ -1,5 +1,6 @@
 use clang::{Clang, Index};
 use entity::{convert_entity, HeaderFile};
+use headerfiletree::create_hedear_file_entry;
 use serde::Serialize;
 use std::env;
 use std::fs::File;
@@ -12,6 +13,7 @@ mod entity;
 mod headerfiletree;
 mod typ;
 
+use headerfiletree::get_file_location_path;
 
 type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -76,7 +78,7 @@ fn pretty_print_entity(entity: &clang::Entity, depth: usize) {
         entity.get_name(),
         entity.get_kind(),
         entity.get_type(),
-        entity.get_name()
+        get_file_location_path(entity)
     );
     entity.get_children().iter().for_each(|entity| {
         pretty_print_entity(entity, depth + 1);
@@ -84,20 +86,8 @@ fn pretty_print_entity(entity: &clang::Entity, depth: usize) {
 }
 
 fn call_save_to_file(root: &clang::Entity, current_filename: &PathBuf) {
-    let mut entries = vec![];
-    root.get_children().iter().for_each(|e| {
-        if let Some(sl) = e.get_location() {
-            if let Some(f) = sl.get_file_location().file {
-                if PathBuf::from(f.get_path()) == *current_filename {
-                    if let Some(entry) = convert_entity(e) {
-                        entries.push(entry);
-                    }
-                }
-            }
-        }
-    });
-    let entries = HeaderFile { entries, path: current_filename.clone() };
-    save_to_file(&entries, "point.json").unwrap();
+    let header_file_entry = create_hedear_file_entry(&root.get_children(), current_filename);
+    save_to_file(&header_file_entry, "point.json").unwrap();
 }
 
 fn save_to_file<T: Serialize>(data: &T, filename: &str) -> io::Result<()> {
