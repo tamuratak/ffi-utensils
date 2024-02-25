@@ -114,7 +114,7 @@ pub struct ObjCPropertyDecl {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ParmDecl {
-    pub name: String,
+    pub name: Option<String>,
     pub objc_type: Typ,
 }
 

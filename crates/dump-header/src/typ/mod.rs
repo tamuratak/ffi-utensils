@@ -171,7 +171,7 @@ impl Typ {
                         .iter()
                         .map(|e| {
                             (
-                                e.get_name().unwrap(),
+                                e.get_name().expect(format!("field name not found: {:?}", e).as_str()),
                                 Typ::from0(e.get_type().unwrap(), memo.clone()),
                             )
                         })

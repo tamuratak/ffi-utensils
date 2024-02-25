@@ -190,10 +190,10 @@ fn get_arguments(entity: &clang::Entity) -> Vec<ParmDecl> {
     if let Some(args) = entity.get_arguments() {
         args.iter().for_each(|arg| {
             if let clang::EntityKind::ParmDecl = arg.get_kind() {
-                arguments.push(ParmDecl {
-                    name: arg.get_name().unwrap(),
-                    objc_type: Typ::from(arg.get_type().unwrap()),
-                });
+                    arguments.push(ParmDecl {
+                        name: arg.get_name(),
+                        objc_type: Typ::from(arg.get_type().unwrap()),
+                    });
             }
         });
     }
