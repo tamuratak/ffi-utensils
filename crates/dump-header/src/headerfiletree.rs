@@ -29,9 +29,7 @@ pub fn create_hedear_file_entry(
     let mut entries = vec![];
     all_entries.iter().for_each(|e| {
         if is_in_file(e, filename) {
-            println!("bbb0 {:?}", e);
             if let Some(entry) = convert_entity(e) {
-                println!("bbb {:?}", e);
                 entries.push(entry);
             }
         }
@@ -48,12 +46,10 @@ pub fn create_header_file_tree(
     root_entity.get_children().iter().for_each(|e| {
         if let Some(path) = get_file_location_path(e) {
             if path_entry_hash_map.get(&path).is_none() {
-                println!("{:?}", path);
                 let header_file_node = HeaderFileNode::new(create_hedear_file_entry(
                     &root_entity.get_children(),
                     &path,
                 ));
-                println!("aaa");
                 path_entry_hash_map.insert(path.clone(), Rc::new(RefCell::new(header_file_node)));
             }
         }

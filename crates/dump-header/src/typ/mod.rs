@@ -1,3 +1,6 @@
+use std::collections::HashSet;
+use std::cell::RefCell;
+
 use clang::TypeKind;
 use serde::{Deserialize, Serialize};
 
@@ -87,18 +90,22 @@ pub enum Typ {
 
 impl Typ {
     pub fn from(ty: clang::Type) -> Self {
+        Self::from0(ty, HashSet::new())
+    }
+
+    fn from0(ty: clang::Type, memo: HashSet<String>) -> Self {
         let name = ty.get_display_name();
         let nullability = ty.get_nullability().map(|n| Nullability::from(n));
         match ty.get_kind() {
             TypeKind::Attributed | TypeKind::Elaborated => {
                 let canonical_ty = ty.get_canonical_type();
-                Self::from_impl(canonical_ty, name, nullability)
+                Self::from_impl(canonical_ty, name, nullability, memo)
             }
-            _ => Self::from_impl(ty, name, nullability),
+            _ => Self::from_impl(ty, name, nullability, memo),
         }
     }
 
-    fn from_impl(ty: clang::Type, name: String, nullability: Option<Nullability>) -> Self {
+    fn from_impl(ty: clang::Type, name: String, nullability: Option<Nullability>, mut memo: HashSet<String>) -> Self {
         let clang_kind = ty.get_kind();
         let objc_encoding = ty.get_objc_encoding();
         let is_const = ty.is_const_qualified();
@@ -114,7 +121,7 @@ impl Typ {
                 objc_encoding,
                 pointee_type: ty
                     .get_pointee_type()
-                    .map(|t| Box::new(Typ::from(t)))
+                    .map(|t| Box::new(Typ::from0(t, memo.clone())))
                     .unwrap(),
                 is_const,
             },
@@ -127,8 +134,8 @@ impl Typ {
                     is_const,
                     argument_types: ty
                         .get_argument_types()
-                        .map(|t| t.iter().map(|t| Typ::from(*t)).collect()),
-                    result_type: ty.get_result_type().map(|t| Box::new(Typ::from(t))),
+                        .map(|t| t.iter().map(|t| Typ::from0(*t, memo.clone())).collect()),
+                    result_type: ty.get_result_type().map(|t| Box::new(Typ::from0(t, memo.clone()))),
                 }
             }
             TypeKind::ConstantArray
@@ -139,12 +146,19 @@ impl Typ {
                 clang_kind,
                 nullability,
                 objc_encoding,
-                element_type: Box::new(Typ::from(ty.get_element_type().unwrap())),
+                element_type: Box::new(Typ::from0(ty.get_element_type().unwrap(), memo.clone())),
                 size: ty.get_size(),
                 is_const,
             },
             TypeKind::Record => {
                 let ident = ty.get_declaration().unwrap().get_name().unwrap();
+                if memo.contains(&ident) {
+                    return Self::RecordIdent {
+                        ident
+                    };
+                } else {
+                    memo.insert(ident.clone());
+                }
                 Self::Record {
                     name,
                     ident,
@@ -153,7 +167,7 @@ impl Typ {
                         .unwrap()
                         .iter()
                         .map(|e| {
-                            (e.get_name().unwrap(), Typ::from(e.get_type().unwrap()))
+                            (e.get_name().unwrap(), Typ::from0(e.get_type().unwrap(), memo.clone()))
                         })
                         .collect(),
                     clang_kind,
@@ -175,7 +189,7 @@ impl Typ {
                 objc_type_arguments: ty
                     .get_objc_type_arguments()
                     .iter()
-                    .map(|t| Typ::from(*t))
+                    .map(|t| Typ::from0(*t, memo.clone()))
                     .collect(),
                 is_const,
             },
