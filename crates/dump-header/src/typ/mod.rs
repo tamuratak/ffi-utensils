@@ -63,6 +63,9 @@ pub enum Typ {
         objc_encoding: Option<String>,
         is_const: bool,
     },
+    RecordIdent {
+        ident: String
+    },
     ObjC {
         name: String,
         #[serde(with = "TypeKindDef")]

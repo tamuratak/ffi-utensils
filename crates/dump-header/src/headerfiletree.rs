@@ -36,10 +36,7 @@ pub fn create_hedear_file_entry(
             }
         }
     });
-    super::HeaderFile {
-        entries,
-        path: filename.clone(),
-    }
+    super::HeaderFile::new(entries, filename.clone())
 }
 
 pub fn create_header_file_tree(

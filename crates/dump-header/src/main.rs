@@ -1,5 +1,5 @@
 use clang::{Clang, Index};
-use entity::{convert_entity, HeaderFile};
+use entity::HeaderFile;
 use headerfiletree::create_hedear_file_entry;
 use serde::Serialize;
 use std::env;
@@ -19,6 +19,7 @@ type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 // TODO
 // - Add memo to Typ::from. recursive type causes segfault.
+//   RecordIdent 
 
 fn main() -> Result<(), BoxError> {
     let args: Vec<String> = env::args().collect();
