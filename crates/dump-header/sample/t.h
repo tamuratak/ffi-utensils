@@ -1,3 +1,12 @@
-#import <Foundation/Foundation.h>
+struct mach_port_options {
+    int a;
+    union {
+        int b;
+        int c;
+    };
+};
 
-NSSet * volatile _Nonnull __strong a;
+union mach_port_options_union {
+    int a;
+    int b;
+};

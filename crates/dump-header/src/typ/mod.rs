@@ -28,6 +28,7 @@ impl Nullability {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RecordField {
     name: Option<String>,
+    is_anonymous: bool,
     ty: Typ,
 }
 
@@ -166,7 +167,9 @@ impl Typ {
                 let ident = ty.get_declaration().map(|e| e.get_name()).flatten();
                 if let Some(ref ident) = ident {
                     if memo.borrow().contains(ident) {
-                        return Self::RecordIdent { ident: ident.clone() };
+                        return Self::RecordIdent {
+                            ident: ident.clone(),
+                        };
                     }
                     memo.borrow_mut().insert(ident.clone());
                 }
@@ -177,11 +180,10 @@ impl Typ {
                         .get_fields()
                         .unwrap()
                         .iter()
-                        .map(|e| {
-                            RecordField {
-                                name: e.get_name(),
-                                ty: Typ::from0(e.get_type().unwrap(), memo.clone()),
-                            }
+                        .map(|e| RecordField {
+                            name: e.get_name(),
+                            is_anonymous: e.is_anonymous_record_decl(),
+                            ty: Typ::from0(e.get_type().unwrap(), memo.clone()),
                         })
                         .collect(),
                     clang_kind,

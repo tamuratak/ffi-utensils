@@ -95,6 +95,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
         }),
         clang::EntityKind::UnionDecl => Some(Entry::UnionDecl {
             name,
+            is_anonymous: entity.is_anonymous_record_decl(),
             objc_type: Typ::from(entity.get_type().unwrap()),
             platform_availability,
             availability,

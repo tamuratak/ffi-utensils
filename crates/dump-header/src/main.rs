@@ -17,6 +17,7 @@ type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 // TODO
 // - fix anonymous union
+// - get_fields と anonymous union の関係
 
 fn main() -> Result<(), BoxError> {
     let args: Vec<String> = env::args().collect();
@@ -76,7 +77,7 @@ fn pretty_print_entity(entity: &clang::Entity, depth: usize) {
         entity.get_name(),
         entity.get_kind(),
         entity.get_type(),
-        entity.is_anonymous_record_decl()
+        entity.get_type().map(move |t| t.get_fields().map(|v| v.iter().map(|e| e.get_canonical_entity().is_anonymous_record_decl()).collect::<Vec<_>>()))
     );
     entity.get_children().iter().for_each(|entity| {
         pretty_print_entity(entity, depth + 1);

@@ -45,6 +45,7 @@ pub enum Entry {
     },
     UnionDecl {
         name: String,
+        is_anonymous: bool,
         objc_type: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
