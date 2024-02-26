@@ -26,6 +26,12 @@ impl Nullability {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct RecordField {
+    name: Option<String>,
+    ty: Typ,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "kind")]
 pub enum Typ {
     Pointer {
@@ -59,8 +65,8 @@ pub enum Typ {
     },
     Record {
         name: String,
-        ident: String,
-        fields: Vec<(String, Typ)>,
+        ident: Option<String>,
+        fields: Vec<RecordField>,
         #[serde(with = "TypeKindDef")]
         clang_kind: clang::TypeKind,
         nullability: Option<Nullability>,
@@ -157,11 +163,13 @@ impl Typ {
                 is_const,
             },
             TypeKind::Record => {
-                let ident = ty.get_declaration().unwrap().get_name().unwrap();
-                if memo.borrow().contains(&ident) {
-                    return Self::RecordIdent { ident };
+                let ident = ty.get_declaration().map(|e| e.get_name()).flatten();
+                if let Some(ref ident) = ident {
+                    if memo.borrow().contains(ident) {
+                        return Self::RecordIdent { ident: ident.clone() };
+                    }
+                    memo.borrow_mut().insert(ident.clone());
                 }
-                memo.borrow_mut().insert(ident.clone());
                 Self::Record {
                     name,
                     ident,
@@ -170,10 +178,10 @@ impl Typ {
                         .unwrap()
                         .iter()
                         .map(|e| {
-                            (
-                                e.get_name().expect(format!("field name not found: {:?}", e).as_str()),
-                                Typ::from0(e.get_type().unwrap(), memo.clone()),
-                            )
+                            RecordField {
+                                name: e.get_name(),
+                                ty: Typ::from0(e.get_type().unwrap(), memo.clone()),
+                            }
                         })
                         .collect(),
                     clang_kind,

@@ -37,7 +37,13 @@ pub enum Entry {
         availability: clang::Availability,
     },
     StructDecl {
-        fields: Vec<FieldDecl>,
+        name: String,
+        objc_type: Typ,
+        platform_availability: Option<Vec<PlatformAvailability>>,
+        #[serde(with = "AvailabilityDef")]
+        availability: clang::Availability,
+    },
+    UnionDecl {
         name: String,
         objc_type: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
@@ -131,11 +137,13 @@ pub struct EnumConstantDecl {
     pub objc_type: Typ,
 }
 
+/*
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FieldDecl {
     pub name: String,
     pub objc_type: Typ,
 }
+*/
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HeaderFile {

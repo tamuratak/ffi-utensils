@@ -13,8 +13,6 @@ mod entity;
 mod headerfiletree;
 mod typ;
 
-use headerfiletree::get_file_location_path;
-
 type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 // TODO
@@ -78,7 +76,7 @@ fn pretty_print_entity(entity: &clang::Entity, depth: usize) {
         entity.get_name(),
         entity.get_kind(),
         entity.get_type(),
-        get_file_location_path(entity)
+        entity.is_anonymous_record_decl()
     );
     entity.get_children().iter().for_each(|entity| {
         pretty_print_entity(entity, depth + 1);
