@@ -15,7 +15,7 @@ pub enum Entry {
     },
     TypedefDecl {
         name: String,
-        objc_type: Typ,
+        ty: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
@@ -23,14 +23,14 @@ pub enum Entry {
     EnumDecl {
         decls: Vec<EnumConstantDecl>,
         name: String,
-        objc_type: Typ,
+        ty: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
     },
     VarDecl {
         name: String,
-        objc_type: Typ,
+        ty: Typ,
         init_expr: Option<InitExpr>,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
@@ -39,26 +39,26 @@ pub enum Entry {
     StructDecl {
         name: String,
         fields: Vec<Entry>,
-        objc_type: Typ,
+        ty: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
     },
     FieldDecl {
         name: String,
-        objc_type: Typ,
+        ty: Typ,
     },
     UnionDecl {
         name: String,
         is_anonymous: bool,
-        objc_type: Typ,
+        ty: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
     },
     FunctionDecl {
         name: String,
-        objc_type: Typ,
+        ty: Typ,
         arguments: Vec<ParmDecl>,
         result_type: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,

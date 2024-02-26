@@ -184,9 +184,8 @@ impl Typ {
                             name: e.get_name(),
                             is_anonymous: e
                                 .get_type()
-                                .unwrap()
-                                .get_declaration()
-                                .map(|e| e.is_anonymous_record_decl()),
+                                .map(|t| t.get_declaration().map(|e| e.is_anonymous_record_decl()))
+                                .flatten(),
                             ty: Typ::from0(e.get_type().unwrap(), memo.clone()),
                         })
                         .collect(),

@@ -34,7 +34,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
         }
         clang::EntityKind::TypedefDecl => Some(Entry::TypedefDecl {
             name,
-            objc_type: entity
+            ty: entity
                 .get_typedef_underlying_type()
                 .map(|t| Typ::from(t))
                 .unwrap(),
@@ -71,7 +71,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
             Some(Entry::EnumDecl {
                 decls,
                 name,
-                objc_type: Typ::from(entity.get_enum_underlying_type().unwrap()),
+                ty: Typ::from(entity.get_enum_underlying_type().unwrap()),
                 platform_availability,
                 availability,
             })
@@ -80,7 +80,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
             let init_expr = get_init_expr(entity);
             Some(Entry::VarDecl {
                 name,
-                objc_type: Typ::from(entity.get_type().unwrap()),
+                ty: Typ::from(entity.get_type().unwrap()),
                 init_expr,
                 platform_availability,
                 availability,
@@ -89,20 +89,20 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
         clang::EntityKind::StructDecl => Some(Entry::StructDecl {
             name,
             fields: get_fields(entity),
-            objc_type: Typ::from(entity.get_type().unwrap()),
+            ty: Typ::from(entity.get_type().unwrap()),
             platform_availability,
             availability,
         }),
         clang::EntityKind::UnionDecl => Some(Entry::UnionDecl {
             name,
             is_anonymous: entity.is_anonymous_record_decl(),
-            objc_type: Typ::from(entity.get_type().unwrap()),
+            ty: Typ::from(entity.get_type().unwrap()),
             platform_availability,
             availability,
         }),
         clang::EntityKind::FunctionDecl => Some(Entry::FunctionDecl {
             name,
-            objc_type: Typ::from(entity.get_type().unwrap()),
+            ty: Typ::from(entity.get_type().unwrap()),
             arguments: get_arguments(entity),
             result_type: Typ::from(entity.get_result_type().unwrap()),
             platform_availability,
