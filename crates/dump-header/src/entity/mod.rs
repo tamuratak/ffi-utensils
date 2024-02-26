@@ -7,10 +7,12 @@ mod vardecl;
 
 use attributes::ObjCAttributes;
 use availability::get_platform_availability;
-pub use entry::{Entry, EnumConstantDecl, ObjCMethodDecl, ObjCPropertyDecl, ParmDecl, TemplateTypeParameter, HeaderFile};
+pub use entry::{
+    Entry, EnumConstantDecl, HeaderFile, ObjCMethodDecl, ObjCPropertyDecl, ParmDecl,
+    TemplateTypeParameter,
+};
 
 use self::vardecl::get_init_expr;
-
 
 pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
     let name0 = entity.get_name();
@@ -25,14 +27,11 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
         clang::EntityKind::InclusionDirective => {
             let path: Option<std::path::PathBuf> = entity.get_file().map(|f| f.get_path());
             if let Some(path) = path {
-                Some(Entry::InclusionDirective {
-                    name,
-                    path
-                })
+                Some(Entry::InclusionDirective { name, path })
             } else {
                 None
             }
-        },
+        }
         clang::EntityKind::TypedefDecl => Some(Entry::TypedefDecl {
             name,
             objc_type: entity
@@ -86,9 +85,10 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
                 platform_availability,
                 availability,
             })
-        },
+        }
         clang::EntityKind::StructDecl => Some(Entry::StructDecl {
             name,
+            fields: get_fields(entity),
             objc_type: Typ::from(entity.get_type().unwrap()),
             platform_availability,
             availability,
@@ -158,7 +158,6 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
                             availability: e.get_availability(),
                         };
                         properties.push(property);
-                    
                     }
                     _ => {}
                 });
@@ -183,31 +182,23 @@ fn get_arguments(entity: &clang::Entity) -> Vec<ParmDecl> {
     if let Some(args) = entity.get_arguments() {
         args.iter().for_each(|arg| {
             if let clang::EntityKind::ParmDecl = arg.get_kind() {
-                    arguments.push(ParmDecl {
-                        name: arg.get_name(),
-                        objc_type: Typ::from(arg.get_type().unwrap()),
-                    });
+                arguments.push(ParmDecl {
+                    name: arg.get_name(),
+                    objc_type: Typ::from(arg.get_type().unwrap()),
+                });
             }
         });
     }
     arguments
 }
 
-/*
-fn get_fields(entity: &clang::Entity) -> Vec<FieldDecl> {
+fn get_fields(entity: &clang::Entity) -> Vec<Entry> {
     entity
         .get_children()
         .iter()
-        .filter_map(|e| {
-            if let clang::EntityKind::FieldDecl = e.get_kind() {
-                Some(FieldDecl {
-                    name: e.get_name().unwrap(),
-                    objc_type: Typ::from(e.get_type().unwrap()),
-                })
-            } else {
-                None
-            }
+        .filter_map(|e| match e.get_kind() {
+            clang::EntityKind::FieldDecl | clang::EntityKind::UnionDecl => convert_entity(e),
+            _ => None,
         })
         .collect()
 }
-*/

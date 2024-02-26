@@ -38,10 +38,15 @@ pub enum Entry {
     },
     StructDecl {
         name: String,
+        fields: Vec<Entry>,
         objc_type: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
+    },
+    FieldDecl {
+        name: String,
+        objc_type: Typ,
     },
     UnionDecl {
         name: String,
@@ -138,13 +143,11 @@ pub struct EnumConstantDecl {
     pub objc_type: Typ,
 }
 
-/*
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FieldDecl {
     pub name: String,
     pub objc_type: Typ,
 }
-*/
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HeaderFile {
@@ -166,5 +169,4 @@ impl HeaderFile {
             })
             .collect()
     }
-
 }

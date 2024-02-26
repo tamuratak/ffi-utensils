@@ -28,7 +28,7 @@ impl Nullability {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RecordField {
     name: Option<String>,
-    is_anonymous: bool,
+    is_anonymous: Option<bool>,
     ty: Typ,
 }
 
@@ -182,7 +182,11 @@ impl Typ {
                         .iter()
                         .map(|e| RecordField {
                             name: e.get_name(),
-                            is_anonymous: e.is_anonymous_record_decl(),
+                            is_anonymous: e
+                                .get_type()
+                                .unwrap()
+                                .get_declaration()
+                                .map(|e| e.is_anonymous_record_decl()),
                             ty: Typ::from0(e.get_type().unwrap(), memo.clone()),
                         })
                         .collect(),
