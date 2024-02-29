@@ -4,17 +4,40 @@ use std::path::PathBuf;
 use std::rc::Rc;
 
 use clang::source::File;
+use serde::{Deserialize, Serialize};
 
-use crate::entity::convert_entity;
+use crate::entity::{convert_entity, Entry};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct HeaderFile {
+    pub entries: Vec<Entry>,
+    pub path: PathBuf,
+}
+
+impl HeaderFile {
+    pub fn new(entries: Vec<Entry>, path: PathBuf) -> Self {
+        HeaderFile { entries, path }
+    }
+
+    pub fn get_include_directives(&self) -> Vec<(String, PathBuf)> {
+        self.entries
+            .iter()
+            .filter_map(|entry| match entry {
+                Entry::InclusionDirective { name, path } => Some((name.clone(), path.clone())),
+                _ => None,
+            })
+            .collect()
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct HeaderFileNode {
-    pub file: Rc<RefCell<super::HeaderFile>>,
+    pub file: Rc<RefCell<HeaderFile>>,
     pub children: Vec<Rc<RefCell<HeaderFileNode>>>,
 }
 
 impl HeaderFileNode {
-    pub fn new(file: super::HeaderFile) -> Self {
+    pub fn new(file: HeaderFile) -> Self {
         HeaderFileNode {
             file: Rc::new(RefCell::new(file)),
             children: vec![],
@@ -25,7 +48,7 @@ impl HeaderFileNode {
 pub fn create_hedear_file_entry(
     all_entries: &Vec<clang::Entity>,
     filename: &PathBuf,
-) -> super::HeaderFile {
+) -> HeaderFile {
     let mut entries = vec![];
     all_entries.iter().for_each(|e| {
         if is_in_file(e, filename) {
@@ -34,7 +57,7 @@ pub fn create_hedear_file_entry(
             }
         }
     });
-    super::HeaderFile::new(entries, filename.clone())
+    HeaderFile::new(entries, filename.clone())
 }
 
 pub fn create_header_file_tree(

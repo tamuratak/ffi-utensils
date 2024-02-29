@@ -8,7 +8,7 @@ mod vardecl;
 use attributes::ObjCAttributes;
 use availability::get_platform_availability;
 pub use entry::{
-    Entry, EnumConstantDecl, HeaderFile, ObjCMethodDecl, ObjCPropertyDecl, ParmDecl,
+    Entry, EnumConstantDecl, ObjCMethodDecl, ObjCPropertyDecl, ParmDecl,
     TemplateTypeParameter,
 };
 

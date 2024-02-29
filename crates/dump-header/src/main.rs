@@ -1,5 +1,4 @@
 use clang::{Clang, Index};
-use entity::HeaderFile;
 use headerfiletree::create_hedear_file_entry;
 use serde::Serialize;
 use std::env;
@@ -16,6 +15,7 @@ mod typ;
 type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 // TODO
+// - framework dependencies
 
 fn main() -> Result<(), BoxError> {
     let args: Vec<String> = env::args().collect();
@@ -61,7 +61,7 @@ fn main() -> Result<(), BoxError> {
         }
     });
     println!("{:?}", headerfiletree::traverse(&tu.get_entity(), &filename));
-    println!("{:?}", create_header_file_tree(&tu.get_entity(), &filename));
+    println!("{:?}", create_header_file_tree(&tu.get_entity(), &filename).map(|tree| tree.borrow().file.borrow().entries.clone()));
     call_save_to_file(&tu.get_entity(), &filename);
     Ok(())
 }
@@ -75,7 +75,7 @@ fn pretty_print_entity(entity: &clang::Entity, depth: usize) {
         entity.get_name(),
         entity.get_kind(),
         entity.get_type(),
-        entity.get_type().map(|t| t.get_declaration().map(|e| e.is_anonymous_record_decl()))
+        ""
     );
     entity.get_children().iter().for_each(|entity| {
         pretty_print_entity(entity, depth + 1);

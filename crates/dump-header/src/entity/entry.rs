@@ -149,24 +149,3 @@ pub struct FieldDecl {
     pub objc_type: Typ,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct HeaderFile {
-    pub entries: Vec<Entry>,
-    pub path: PathBuf,
-}
-
-impl HeaderFile {
-    pub fn new(entries: Vec<Entry>, path: PathBuf) -> Self {
-        HeaderFile { entries, path }
-    }
-
-    pub fn get_include_directives(&self) -> Vec<(String, PathBuf)> {
-        self.entries
-            .iter()
-            .filter_map(|entry| match entry {
-                Entry::InclusionDirective { name, path } => Some((name.clone(), path.clone())),
-                _ => None,
-            })
-            .collect()
-    }
-}
