@@ -61,7 +61,7 @@ fn main() -> Result<(), BoxError> {
         }
     });
     println!("{:?}", headerfiletree::traverse(&tu.get_entity(), &filename));
-    println!("{:?}", create_header_file_tree(&tu.get_entity(), &filename).map(|tree| tree.borrow().file.borrow().entries.clone()));
+    println!("{:?}", create_header_file_tree(&tu.get_entity(), &filename).map(|tree| tree.borrow().header_file.borrow().entries.clone()));
     call_save_to_file(&tu.get_entity(), &filename);
     Ok(())
 }

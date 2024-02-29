@@ -32,14 +32,14 @@ impl HeaderFile {
 
 #[derive(Debug, Clone)]
 pub struct HeaderFileNode {
-    pub file: Rc<RefCell<HeaderFile>>,
+    pub header_file: Rc<RefCell<HeaderFile>>,
     pub children: Vec<Rc<RefCell<HeaderFileNode>>>,
 }
 
 impl HeaderFileNode {
     pub fn new(file: HeaderFile) -> Self {
         HeaderFileNode {
-            file: Rc::new(RefCell::new(file)),
+            header_file: Rc::new(RefCell::new(file)),
             children: vec![],
         }
     }
@@ -83,7 +83,7 @@ pub fn create_header_file_tree(
         .for_each(|(_, header_file_node)| {
             header_file_node
                 .borrow_mut()
-                .file
+                .header_file
                 .borrow()
                 .get_include_directives()
                 .iter()
