@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -8,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::entity::{convert_entity, Entry};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct HeaderFile {
     pub entries: Vec<Entry>,
     pub path: PathBuf,
@@ -30,18 +29,69 @@ impl HeaderFile {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct HeaderFileNode {
-    pub header_file: Rc<RefCell<HeaderFile>>,
-    pub children: Vec<Rc<RefCell<HeaderFileNode>>>,
+#[derive(Debug)]
+pub struct HeaderFileTree {
+    root_filepath: PathBuf,
+    path_entry_hash_map: HashMap<PathBuf, Rc<HeaderFile>>,
 }
 
-impl HeaderFileNode {
-    pub fn new(file: HeaderFile) -> Self {
-        HeaderFileNode {
-            header_file: Rc::new(RefCell::new(file)),
-            children: vec![],
+impl HeaderFileTree {
+    pub fn new(root_filepath: &PathBuf) -> Self {
+        let path_entry_hash_map: HashMap<PathBuf, Rc<HeaderFile>> = HashMap::new();
+        HeaderFileTree {
+            root_filepath: root_filepath.clone(),
+            path_entry_hash_map,
         }
+    }
+
+    pub fn get(&self, path: &PathBuf) -> Option<HeaderFileNode> {
+        self.path_entry_hash_map
+            .get(path)
+            .map(|n| HeaderFileNode::new(n.clone(), &self.path_entry_hash_map))
+    }
+
+    pub fn insert(&mut self, file: HeaderFile) {
+        self.path_entry_hash_map
+            .insert(file.path.clone(), Rc::new(file));
+    }
+
+    pub fn get_root(&self) -> Option<HeaderFileNode> {
+        self.get(&self.root_filepath)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct HeaderFileNode<'a> {
+    header_file: Rc<HeaderFile>,
+    path_entry_hash_map: &'a HashMap<PathBuf, Rc<HeaderFile>>,
+}
+
+impl<'a> HeaderFileNode<'a> {
+    pub fn new(
+        header_file: Rc<HeaderFile>,
+        path_entry_hash_map: &'a HashMap<PathBuf, Rc<HeaderFile>>,
+    ) -> Self {
+        HeaderFileNode {
+            header_file,
+            path_entry_hash_map,
+        }
+    }
+
+    pub fn entries(&self) -> &Vec<Entry> {
+        &self.header_file.entries
+    }
+
+    pub fn path(&self) -> &PathBuf {
+        &self.header_file.path
+    }
+
+    pub fn get_children(&self) -> Vec<HeaderFileNode> {
+        self.header_file
+            .get_include_directives()
+            .iter()
+            .filter_map(|(_, path)| self.path_entry_hash_map.get(path))
+            .map(|entry| HeaderFileNode::new(entry.clone(), self.path_entry_hash_map))
+            .collect()
     }
 }
 
@@ -63,37 +113,17 @@ pub fn create_hedear_file_entry(
 pub fn create_header_file_tree(
     root_entity: &clang::Entity,
     root_filepath: &PathBuf,
-) -> Option<Rc<RefCell<HeaderFileNode>>> {
-    let mut path_entry_hash_map: HashMap<PathBuf, Rc<RefCell<HeaderFileNode>>> = HashMap::new();
+) -> HeaderFileTree {
+    let mut header_file_tree = HeaderFileTree::new(root_filepath);
     root_entity.get_children().iter().for_each(|e| {
         if let Some(path) = get_file_location_path(e) {
-            if path_entry_hash_map.get(&path).is_none() {
-                let header_file_node = HeaderFileNode::new(create_hedear_file_entry(
-                    &root_entity.get_children(),
-                    &path,
-                ));
-                path_entry_hash_map.insert(path.clone(), Rc::new(RefCell::new(header_file_node)));
+            if header_file_tree.get(&path).is_none() {
+                let header_file = create_hedear_file_entry(&root_entity.get_children(), &path);
+                header_file_tree.insert(header_file);
             }
         }
     });
-    let root_node = path_entry_hash_map.get(root_filepath);
-
-    path_entry_hash_map
-        .iter()
-        .for_each(|(_, header_file_node)| {
-            header_file_node
-                .borrow_mut()
-                .header_file
-                .borrow()
-                .get_include_directives()
-                .iter()
-                .for_each(|(_, path)| {
-                    if let Some(child) = path_entry_hash_map.get(path) {
-                        header_file_node.borrow_mut().children.push(child.clone());
-                    }
-                })
-        });
-    root_node.map(|node| node.clone())
+    header_file_tree
 }
 
 pub fn traverse<'tu>(entity: &clang::Entity<'tu>, filename: &PathBuf) -> Vec<File<'tu>> {
