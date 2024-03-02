@@ -1,4 +1,4 @@
-use clang::{Clang, Index};
+use clang::{Clang, Index, TranslationUnit};
 use headerfiletree::HeaderFile;
 use serde::Serialize;
 use std::env;
@@ -6,7 +6,8 @@ use std::fs::File;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
-use crate::headerfiletree::create_header_file_tree;
+use crate::headerfiletree::HeaderFileTree;
+
 
 mod entity;
 mod headerfiletree;
@@ -61,8 +62,8 @@ fn main() -> Result<(), BoxError> {
             pretty_print_entity(entity, 0);
         }
     });
-    println!("{:?}", create_header_file_tree(&filename, &tu.get_entity()));
-    call_save_to_file(&tu.get_entity(), &filename);
+    println!("{:?}", HeaderFileTree::from_root_path(&filename, &tu));
+    call_save_to_file(&tu, &filename);
     Ok(())
 }
 
@@ -82,8 +83,8 @@ fn pretty_print_entity(entity: &clang::Entity, depth: usize) {
     });
 }
 
-fn call_save_to_file(root: &clang::Entity, current_filename: &PathBuf) {
-    let header_file_entry = HeaderFile::from_all_entries(current_filename, &root.get_children());
+fn call_save_to_file(tu: &TranslationUnit, current_filename: &PathBuf) {
+    let header_file_entry = HeaderFile::from_path(current_filename, &tu);
     save_to_file(&header_file_entry, "point.json").unwrap();
 }
 

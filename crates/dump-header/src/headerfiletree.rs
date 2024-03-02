@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use clang::source::File;
+use clang::TranslationUnit;
 use serde::{Deserialize, Serialize};
 
 use crate::entity::{convert_entity, Entry};
@@ -17,9 +17,9 @@ impl HeaderFile {
         HeaderFile { entries, path }
     }
 
-    pub fn from_all_entries(path: &PathBuf, all_entries: &Vec<clang::Entity>) -> Self {
+    pub fn from_path(path: &PathBuf, tu: &TranslationUnit) -> Self {
         let mut entries = vec![];
-        all_entries.iter().for_each(|e| {
+        tu.get_entity().get_children().iter().for_each(|e| {
             if is_in_file(e, path) {
                 if let Some(entry) = convert_entity(e) {
                     entries.push(entry);
@@ -55,13 +55,13 @@ impl HeaderFileTree {
         }
     }
 
-    pub fn from_root_entity(root_filepath: &PathBuf, root_entity: &clang::Entity) -> Self {
-        let mut header_file_tree = Self::new(root_filepath);
-        root_entity.get_children().iter().for_each(|e| {
+    pub fn from_root_path(root_path: &PathBuf, tu: &TranslationUnit) -> Self {
+        let mut header_file_tree = Self::new(root_path);
+        tu.get_entity().get_children().iter().for_each(|e| {
             if let Some(path) = get_file_location_path(e) {
                 if header_file_tree.get(&path).is_none() {
                     let header_file =
-                        HeaderFile::from_all_entries(&path, &root_entity.get_children());
+                        HeaderFile::from_path(&path, tu);
                     header_file_tree.insert(header_file);
                 }
             }
@@ -117,22 +117,6 @@ impl<'a> HeaderFileNode<'a> {
             .map(|entry| HeaderFileNode::new(entry, self.path_entry_hash_map))
             .collect()
     }
-}
-
-pub fn create_header_file_tree(
-    root_filepath: &PathBuf,
-    root_entity: &clang::Entity,
-) -> HeaderFileTree {
-    let mut header_file_tree = HeaderFileTree::new(root_filepath);
-    root_entity.get_children().iter().for_each(|e| {
-        if let Some(path) = get_file_location_path(e) {
-            if header_file_tree.get(&path).is_none() {
-                let header_file = HeaderFile::from_all_entries(&path, &root_entity.get_children());
-                header_file_tree.insert(header_file);
-            }
-        }
-    });
-    header_file_tree
 }
 
 fn is_in_file(entity: &clang::Entity, filename: &PathBuf) -> bool {
