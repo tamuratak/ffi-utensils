@@ -50,8 +50,7 @@ impl HeaderFileTree {
     }
 
     pub fn insert(&mut self, file: HeaderFile) {
-        self.path_entry_hash_map
-            .insert(file.path.clone(), file);
+        self.path_entry_hash_map.insert(file.path.clone(), file);
     }
 
     pub fn get_root(&self) -> Option<HeaderFileNode> {
