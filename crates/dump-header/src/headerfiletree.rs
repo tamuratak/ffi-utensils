@@ -19,9 +19,9 @@ impl HeaderFile {
 
     pub fn from_path(path: &PathBuf, tu: &TranslationUnit) -> Self {
         let mut entries = vec![];
-        tu.get_entity().get_children().iter().for_each(|e| {
-            if is_in_file(e, path) {
-                if let Some(entry) = convert_entity(e) {
+        tu.get_entity().get_children().iter().for_each(|entity| {
+            if is_in_file(entity, path) {
+                if let Some(entry) = convert_entity(entity) {
                     entries.push(entry);
                 }
             }
@@ -72,7 +72,7 @@ impl HeaderFileTree {
     pub fn get(&self, path: &PathBuf) -> Option<HeaderFileNode> {
         self.path_entry_hash_map
             .get(path)
-            .map(|n| HeaderFileNode::new(n, &self.path_entry_hash_map))
+            .map(|hf| HeaderFileNode::new(hf, &self.path_entry_hash_map))
     }
 
     fn insert(&mut self, file: HeaderFile) {
@@ -114,7 +114,7 @@ impl<'a> HeaderFileNode<'a> {
             .get_include_directives()
             .iter()
             .filter_map(|(_, path)| self.path_entry_hash_map.get(path))
-            .map(|entry| HeaderFileNode::new(entry, self.path_entry_hash_map))
+            .map(|hf| HeaderFileNode::new(hf, self.path_entry_hash_map))
             .collect()
     }
 }
