@@ -1,5 +1,5 @@
 use clang::{Clang, Index};
-use headerfiletree::create_hedear_file_entry;
+use headerfiletree::HeaderFile;
 use serde::Serialize;
 use std::env;
 use std::fs::File;
@@ -61,7 +61,6 @@ fn main() -> Result<(), BoxError> {
             pretty_print_entity(entity, 0);
         }
     });
-    println!("{:?}", headerfiletree::traverse(&tu.get_entity(), &filename));
     println!("{:?}", create_header_file_tree(&tu.get_entity(), &filename));
     call_save_to_file(&tu.get_entity(), &filename);
     Ok(())
@@ -84,7 +83,7 @@ fn pretty_print_entity(entity: &clang::Entity, depth: usize) {
 }
 
 fn call_save_to_file(root: &clang::Entity, current_filename: &PathBuf) {
-    let header_file_entry = create_hedear_file_entry(&root.get_children(), current_filename);
+    let header_file_entry = HeaderFile::from_all_entries(current_filename, &root.get_children());
     save_to_file(&header_file_entry, "point.json").unwrap();
 }
 

@@ -8,13 +8,28 @@ use crate::entity::{convert_entity, Entry};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HeaderFile {
-    pub entries: Vec<Entry>,
     pub path: PathBuf,
+    pub entries: Vec<Entry>,
 }
 
 impl HeaderFile {
-    pub fn new(entries: Vec<Entry>, path: PathBuf) -> Self {
+    pub fn new(path: PathBuf, entries: Vec<Entry>, ) -> Self {
         HeaderFile { entries, path }
+    }
+
+    pub fn from_all_entries(
+        path: &PathBuf,
+        all_entries: &Vec<clang::Entity>
+    ) -> Self {
+        let mut entries = vec![];
+        all_entries.iter().for_each(|e| {
+            if is_in_file(e, path) {
+                if let Some(entry) = convert_entity(e) {
+                    entries.push(entry);
+                }
+            }
+        });
+        Self::new(path.clone(), entries)
     }
 
     pub fn get_include_directives(&self) -> Vec<(String, PathBuf)> {
@@ -30,7 +45,7 @@ impl HeaderFile {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct HeaderFileTree {
-    root_filepath: PathBuf,
+    root_path: PathBuf,
     path_entry_hash_map: HashMap<PathBuf, HeaderFile>,
 }
 
@@ -38,7 +53,7 @@ impl HeaderFileTree {
     pub fn new(root_filepath: &PathBuf) -> Self {
         let path_entry_hash_map: HashMap<PathBuf, HeaderFile> = HashMap::new();
         HeaderFileTree {
-            root_filepath: root_filepath.clone(),
+            root_path: root_filepath.clone(),
             path_entry_hash_map,
         }
     }
@@ -54,7 +69,7 @@ impl HeaderFileTree {
     }
 
     pub fn get_root(&self) -> Option<HeaderFileNode> {
-        self.get(&self.root_filepath)
+        self.get(&self.root_path)
     }
 }
 
@@ -93,21 +108,6 @@ impl<'a> HeaderFileNode<'a> {
     }
 }
 
-pub fn create_hedear_file_entry(
-    all_entries: &Vec<clang::Entity>,
-    filename: &PathBuf,
-) -> HeaderFile {
-    let mut entries = vec![];
-    all_entries.iter().for_each(|e| {
-        if is_in_file(e, filename) {
-            if let Some(entry) = convert_entity(e) {
-                entries.push(entry);
-            }
-        }
-    });
-    HeaderFile::new(entries, filename.clone())
-}
-
 pub fn create_header_file_tree(
     root_entity: &clang::Entity,
     root_filepath: &PathBuf,
@@ -116,22 +116,12 @@ pub fn create_header_file_tree(
     root_entity.get_children().iter().for_each(|e| {
         if let Some(path) = get_file_location_path(e) {
             if header_file_tree.get(&path).is_none() {
-                let header_file = create_hedear_file_entry(&root_entity.get_children(), &path);
+                let header_file = HeaderFile::from_all_entries(&path, &root_entity.get_children());
                 header_file_tree.insert(header_file);
             }
         }
     });
     header_file_tree
-}
-
-pub fn traverse<'tu>(entity: &clang::Entity<'tu>, filename: &PathBuf) -> Vec<File<'tu>> {
-    let mut vec = vec![];
-    entity.get_children().iter().for_each(|e| {
-        if clang::EntityKind::InclusionDirective == e.get_kind() && is_in_file(e, filename) {
-            e.get_file().map(|f| vec.push(f));
-        }
-    });
-    vec
 }
 
 fn is_in_file(entity: &clang::Entity, filename: &PathBuf) -> bool {
