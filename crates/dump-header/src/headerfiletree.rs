@@ -75,7 +75,7 @@ impl HeaderFileTree {
             .map(|n| HeaderFileNode::new(n, &self.path_entry_hash_map))
     }
 
-    pub fn insert(&mut self, file: HeaderFile) {
+    fn insert(&mut self, file: HeaderFile) {
         self.path_entry_hash_map.insert(file.path.clone(), file);
     }
 
