@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::rc::Rc;
 
 use clang::source::File;
 use serde::{Deserialize, Serialize};
 
 use crate::entity::{convert_entity, Entry};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HeaderFile {
     pub entries: Vec<Entry>,
     pub path: PathBuf,
@@ -29,15 +28,15 @@ impl HeaderFile {
     }
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct HeaderFileTree {
     root_filepath: PathBuf,
-    path_entry_hash_map: HashMap<PathBuf, Rc<HeaderFile>>,
+    path_entry_hash_map: HashMap<PathBuf, HeaderFile>,
 }
 
 impl HeaderFileTree {
     pub fn new(root_filepath: &PathBuf) -> Self {
-        let path_entry_hash_map: HashMap<PathBuf, Rc<HeaderFile>> = HashMap::new();
+        let path_entry_hash_map: HashMap<PathBuf, HeaderFile> = HashMap::new();
         HeaderFileTree {
             root_filepath: root_filepath.clone(),
             path_entry_hash_map,
@@ -47,12 +46,12 @@ impl HeaderFileTree {
     pub fn get(&self, path: &PathBuf) -> Option<HeaderFileNode> {
         self.path_entry_hash_map
             .get(path)
-            .map(|n| HeaderFileNode::new(n.clone(), &self.path_entry_hash_map))
+            .map(|n| HeaderFileNode::new(n, &self.path_entry_hash_map))
     }
 
     pub fn insert(&mut self, file: HeaderFile) {
         self.path_entry_hash_map
-            .insert(file.path.clone(), Rc::new(file));
+            .insert(file.path.clone(), file);
     }
 
     pub fn get_root(&self) -> Option<HeaderFileNode> {
@@ -62,14 +61,14 @@ impl HeaderFileTree {
 
 #[derive(Debug, Clone)]
 pub struct HeaderFileNode<'a> {
-    header_file: Rc<HeaderFile>,
-    path_entry_hash_map: &'a HashMap<PathBuf, Rc<HeaderFile>>,
+    header_file: &'a HeaderFile,
+    path_entry_hash_map: &'a HashMap<PathBuf, HeaderFile>,
 }
 
 impl<'a> HeaderFileNode<'a> {
     pub fn new(
-        header_file: Rc<HeaderFile>,
-        path_entry_hash_map: &'a HashMap<PathBuf, Rc<HeaderFile>>,
+        header_file: &'a HeaderFile,
+        path_entry_hash_map: &'a HashMap<PathBuf, HeaderFile>,
     ) -> Self {
         HeaderFileNode {
             header_file,
@@ -90,7 +89,7 @@ impl<'a> HeaderFileNode<'a> {
             .get_include_directives()
             .iter()
             .filter_map(|(_, path)| self.path_entry_hash_map.get(path))
-            .map(|entry| HeaderFileNode::new(entry.clone(), self.path_entry_hash_map))
+            .map(|entry| HeaderFileNode::new(entry, self.path_entry_hash_map))
             .collect()
     }
 }
