@@ -61,7 +61,7 @@ fn main() -> Result<(), BoxError> {
             pretty_print_entity(entity, 0);
         }
     });
-    println!("{:?}", create_header_file_tree(&tu.get_entity(), &filename));
+    println!("{:?}", create_header_file_tree(&filename, &tu.get_entity()));
     call_save_to_file(&tu.get_entity(), &filename);
     Ok(())
 }

@@ -13,14 +13,11 @@ pub struct HeaderFile {
 }
 
 impl HeaderFile {
-    pub fn new(path: PathBuf, entries: Vec<Entry>, ) -> Self {
+    pub fn new(path: PathBuf, entries: Vec<Entry>) -> Self {
         HeaderFile { entries, path }
     }
 
-    pub fn from_all_entries(
-        path: &PathBuf,
-        all_entries: &Vec<clang::Entity>
-    ) -> Self {
+    pub fn from_all_entries(path: &PathBuf, all_entries: &Vec<clang::Entity>) -> Self {
         let mut entries = vec![];
         all_entries.iter().for_each(|e| {
             if is_in_file(e, path) {
@@ -56,6 +53,20 @@ impl HeaderFileTree {
             root_path: root_filepath.clone(),
             path_entry_hash_map,
         }
+    }
+
+    pub fn from_root_entity(root_filepath: &PathBuf, root_entity: &clang::Entity) -> Self {
+        let mut header_file_tree = Self::new(root_filepath);
+        root_entity.get_children().iter().for_each(|e| {
+            if let Some(path) = get_file_location_path(e) {
+                if header_file_tree.get(&path).is_none() {
+                    let header_file =
+                        HeaderFile::from_all_entries(&path, &root_entity.get_children());
+                    header_file_tree.insert(header_file);
+                }
+            }
+        });
+        header_file_tree
     }
 
     pub fn get(&self, path: &PathBuf) -> Option<HeaderFileNode> {
@@ -109,8 +120,8 @@ impl<'a> HeaderFileNode<'a> {
 }
 
 pub fn create_header_file_tree(
-    root_entity: &clang::Entity,
     root_filepath: &PathBuf,
+    root_entity: &clang::Entity,
 ) -> HeaderFileTree {
     let mut header_file_tree = HeaderFileTree::new(root_filepath);
     root_entity.get_children().iter().for_each(|e| {
