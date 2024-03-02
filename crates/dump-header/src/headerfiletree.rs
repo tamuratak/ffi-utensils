@@ -56,17 +56,17 @@ impl HeaderFileTree {
     }
 
     pub fn from_root_path(root_path: &PathBuf, tu: &TranslationUnit) -> Self {
-        let mut header_file_tree = Self::new(root_path);
-        tu.get_entity().get_children().iter().for_each(|e| {
-            if let Some(path) = get_file_location_path(e) {
-                if header_file_tree.get(&path).is_none() {
+        let mut tree = Self::new(root_path);
+        tu.get_entity().get_children().iter().for_each(|entity| {
+            if let Some(header_file_path) = get_file_location_path(entity) {
+                if tree.get(&header_file_path).is_none() {
                     let header_file =
-                        HeaderFile::from_path(&path, tu);
-                    header_file_tree.insert(header_file);
+                        HeaderFile::from_path(&header_file_path, tu);
+                    tree.insert(header_file);
                 }
             }
         });
-        header_file_tree
+        tree
     }
 
     pub fn get(&self, path: &PathBuf) -> Option<HeaderFileNode> {
