@@ -10,6 +10,7 @@ use crate::headerfiletree::HeaderFileTree;
 
 
 mod entity;
+mod framework;
 mod headerfiletree;
 mod typ;
 
@@ -17,6 +18,8 @@ type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 // TODO
 // - framework dependencies
+// - add parse.rs
+// - cli 
 
 
 fn main() -> Result<(), BoxError> {

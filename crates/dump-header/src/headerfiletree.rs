@@ -60,8 +60,7 @@ impl HeaderFileTree {
         tu.get_entity().get_children().iter().for_each(|entity| {
             if let Some(header_file_path) = get_file_location_path(entity) {
                 if tree.get(&header_file_path).is_none() {
-                    let header_file =
-                        HeaderFile::from_path(&header_file_path, tu);
+                    let header_file = HeaderFile::from_path(&header_file_path, tu);
                     tree.insert(header_file);
                 }
             }
@@ -77,6 +76,10 @@ impl HeaderFileTree {
 
     fn insert(&mut self, file: HeaderFile) {
         self.path_entry_hash_map.insert(file.path.clone(), file);
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &HeaderFile> {
+        self.path_entry_hash_map.iter().map(|(_, hf)| hf)
     }
 
     pub fn get_root(&self) -> Option<HeaderFileNode> {
