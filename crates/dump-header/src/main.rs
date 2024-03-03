@@ -14,13 +14,13 @@ mod headerfiletree;
 mod parser;
 mod typ;
 
-type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
-
 // TODO
-// - framework dependencies
+// - framework 
+// - header file を作って parse して framework tree を生成する
+// - framework の dependencies 
 // - cli
 
-fn main() -> Result<(), BoxError> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     let file_arg = &args[1];
     clang_sys::load()?;

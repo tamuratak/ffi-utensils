@@ -120,7 +120,12 @@ impl Typ {
         memo: Rc<RefCell<HashSet<String>>>,
     ) -> Self {
         let clang_kind = ty.get_kind();
-        let objc_encoding = ty.get_objc_encoding();
+        let objc_encoding = if clang_kind == clang::TypeKind::ObjCObject {
+            Some("@".to_string())
+        } else {
+            // [WORKAROUND] can cause segfault!!
+            ty.get_objc_encoding()
+        };
         let is_const = ty.is_const_qualified();
 
         match clang_kind {

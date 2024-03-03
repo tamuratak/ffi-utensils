@@ -47,7 +47,7 @@ pub struct HeaderFileTree {
 }
 
 impl HeaderFileTree {
-    pub fn new(root_filepath: &PathBuf) -> Self {
+    fn new(root_filepath: &PathBuf) -> Self {
         let path_entry_hash_map: HashMap<PathBuf, HeaderFile> = HashMap::new();
         HeaderFileTree {
             root_path: root_filepath.clone(),
