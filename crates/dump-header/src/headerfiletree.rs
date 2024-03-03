@@ -47,15 +47,15 @@ pub struct HeaderFileTree {
 }
 
 impl HeaderFileTree {
-    fn new(root_filepath: &PathBuf) -> Self {
+    fn new(root_filepath: &Path) -> Self {
         let path_entry_hash_map: HashMap<PathBuf, HeaderFile> = HashMap::new();
         HeaderFileTree {
-            root_path: root_filepath.clone(),
+            root_path: root_filepath.to_path_buf(),
             path_entry_hash_map,
         }
     }
 
-    pub fn from_root_path(root_path: &PathBuf, tu: &TranslationUnit) -> Self {
+    pub fn from_root_path(root_path: &Path, tu: &TranslationUnit) -> Self {
         let mut tree = Self::new(root_path);
         tu.get_entity().get_children().iter().for_each(|entity| {
             if let Some(header_file_path) = get_file_location_path(entity) {

@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::Path;
 
 use clang::{Clang, Index, SourceError, TranslationUnit};
 
@@ -12,9 +12,9 @@ impl<'a> Parser<'a> {
         Self { index }
     }
 
-    pub fn parse(&'a self, filename: &PathBuf) -> Result<TranslationUnit<'a>, SourceError> {
+    pub fn parse(&'a self, filename: &Path) -> Result<TranslationUnit<'a>, SourceError> {
         let tu = self.index
-            .parser(filename.clone())
+            .parser(filename)
             .detailed_preprocessing_record(true)
             .incomplete(true)
             .skip_function_bodies(true)

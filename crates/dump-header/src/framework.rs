@@ -45,13 +45,13 @@ impl Framework {
         self.root_header.parent().unwrap()
     }
 
-    fn include(&self, path: &PathBuf) -> bool {
+    fn include(&self, path: &Path) -> bool {
         path.starts_with(self.root_dir())
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &HeaderFile> {
         self.header_file_tree
             .iter()
-            .filter_map(|hf| self.include(&hf.path).then_some(hf))
+            .filter(|hf| self.include(&hf.path))
     }
 }
