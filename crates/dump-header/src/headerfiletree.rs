@@ -79,7 +79,7 @@ impl HeaderFileTree {
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &HeaderFile> {
-        self.path_entry_hash_map.iter().map(|(_, hf)| hf)
+        self.path_entry_hash_map.values()
     }
 
     pub fn get_root(&self) -> Option<HeaderFileNode> {
@@ -131,6 +131,5 @@ fn is_in_file(entity: &clang::Entity, filename: &PathBuf) -> bool {
 pub fn get_file_location_path(entity: &clang::Entity) -> Option<PathBuf> {
     entity
         .get_location()
-        .map(|sl| sl.get_file_location().file.map(|f| f.get_path()))
-        .flatten()
+        .and_then(|sl| sl.get_file_location().file.map(|f| f.get_path()))
 }

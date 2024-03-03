@@ -103,7 +103,7 @@ impl Typ {
 
     fn from0(ty: clang::Type, memo: Rc<RefCell<HashSet<String>>>) -> Self {
         let name = ty.get_display_name();
-        let nullability = ty.get_nullability().map(|n| Nullability::from(n));
+        let nullability = ty.get_nullability().map(Nullability::from);
         match ty.get_kind() {
             TypeKind::Attributed | TypeKind::Elaborated => {
                 let canonical_ty = ty.get_canonical_type();
@@ -169,7 +169,7 @@ impl Typ {
                 is_const,
             },
             TypeKind::Record => {
-                let ident = ty.get_declaration().map(|e| e.get_name()).flatten();
+                let ident = ty.get_declaration().and_then(|e| e.get_name());
                 if let Some(ref ident) = ident {
                     if memo.borrow().contains(ident) {
                         return Self::RecordIdent {
@@ -189,8 +189,7 @@ impl Typ {
                             name: e.get_name(),
                             is_anonymous: e
                                 .get_type()
-                                .map(|t| t.get_declaration().map(|e| e.is_anonymous_record_decl()))
-                                .flatten(),
+                                .and_then(|t| t.get_declaration().map(|e| e.is_anonymous_record_decl())),
                             ty: Typ::from0(e.get_type().unwrap(), memo.clone()),
                         })
                         .collect(),

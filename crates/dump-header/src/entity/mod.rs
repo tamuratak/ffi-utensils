@@ -16,9 +16,7 @@ use self::vardecl::get_init_expr;
 
 pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
     let name0 = entity.get_name();
-    if let None = name0 {
-        return None;
-    }
+    name0.as_ref()?;
     let name = name0.unwrap();
     let kind = entity.get_kind();
     let platform_availability = get_platform_availability(entity);
@@ -26,11 +24,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
     match kind {
         clang::EntityKind::InclusionDirective => {
             let path: Option<std::path::PathBuf> = entity.get_file().map(|f| f.get_path());
-            if let Some(path) = path {
-                Some(Entry::InclusionDirective { name, path })
-            } else {
-                None
-            }
+            path.map(|path| Entry::InclusionDirective { name, path })
         }
         clang::EntityKind::TypedefDecl => Some(Entry::TypedefDecl {
             name,
@@ -149,7 +143,7 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
                         }
                     }
                     clang::EntityKind::ObjCPropertyDecl => {
-                        let attributes = e.get_objc_attributes().map(|a| ObjCAttributes::from(a));
+                        let attributes = e.get_objc_attributes().map(ObjCAttributes::from);
                         let property = ObjCPropertyDecl {
                             name: e.get_name().unwrap(),
                             objc_type: Typ::from(e.get_type().unwrap()),

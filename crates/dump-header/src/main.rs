@@ -55,7 +55,7 @@ fn pretty_print_entity(entity: &clang::Entity, depth: usize) {
 }
 
 fn call_save_to_file(tu: &TranslationUnit, current_filename: &PathBuf) {
-    let header_file_entry = HeaderFile::from_path(current_filename, &tu);
+    let header_file_entry = HeaderFile::from_path(current_filename, tu);
     save_to_file(&header_file_entry, "point.json").unwrap();
 }
 

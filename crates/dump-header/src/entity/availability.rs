@@ -33,9 +33,9 @@ impl PlatformAvailability {
         Self {
             platform: availability.platform.clone(),
             unavailable: availability.unavailable,
-            introduced: availability.introduced.map(|v| Version::from(v)),
-            deprecated: availability.deprecated.map(|v| Version::from(v)),
-            obsoleted: availability.obsoleted.map(|v| Version::from(v)),
+            introduced: availability.introduced.map(Version::from),
+            deprecated: availability.deprecated.map(Version::from),
+            obsoleted: availability.obsoleted.map(Version::from),
             message: availability.message.clone(),
         }
     }
@@ -53,5 +53,5 @@ pub enum AvailabilityDef {
 pub fn get_platform_availability(entity: &clang::Entity) -> Option<Vec<PlatformAvailability>> {
     entity
         .get_platform_availability()
-        .map(|v| v.iter().map(|a| PlatformAvailability::from(a)).collect())
+        .map(|v| v.iter().map(PlatformAvailability::from).collect())
 }
