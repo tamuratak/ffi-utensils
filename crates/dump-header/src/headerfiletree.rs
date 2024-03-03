@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Path};
 use std::path::PathBuf;
 
 use clang::TranslationUnit;
@@ -131,5 +131,5 @@ fn is_in_file(entity: &clang::Entity, filename: &PathBuf) -> bool {
 pub fn get_file_location_path(entity: &clang::Entity) -> Option<PathBuf> {
     entity
         .get_location()
-        .and_then(|sl| sl.get_file_location().file.map(|f| f.get_path()))
+        .map(|sl| PathBuf::from(sl.get_presumed_location().0))
 }

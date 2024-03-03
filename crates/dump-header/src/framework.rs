@@ -27,7 +27,7 @@ impl Framework {
         name: &str,
         parser: &Parser,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let root_header = format!("<{}/{}.h>", name, name);
+        let root_header = format!("#include <{}/{}.h>", name, name);
         let dir = TempDir::new().unwrap();
         let heder_file = dir.child("t.h");
         std::fs::write(&heder_file, root_header)?;
