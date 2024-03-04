@@ -16,9 +16,10 @@ mod utils;
 
 // TODO
 // - framework
-// - header file を作って parse して framework tree を生成する
-// - framework の dependencies
-// - cli
+//   - sdk path
+// - framework's dependencies
+// - cli with clap
+// - add debug print
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
