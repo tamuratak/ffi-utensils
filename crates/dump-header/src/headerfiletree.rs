@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::{collections::HashMap, path::Path};
 use std::path::PathBuf;
 
@@ -38,9 +39,15 @@ impl HeaderFile {
             })
             .collect()
     }
+
+    pub fn save(&self, path: &Path) -> std::io::Result<()> {
+        let mut file = std::fs::File::create(path)?;
+        file.write_all(serde_json::to_string_pretty(self)?.as_bytes())?;
+        Ok(())
+    }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HeaderFileTree {
     root_path: PathBuf,
     path_entry_hash_map: HashMap<PathBuf, HeaderFile>,
@@ -60,6 +67,7 @@ impl HeaderFileTree {
         tu.get_entity().get_children().iter().for_each(|entity| {
             if let Some(header_file_path) = get_file_location_path(entity) {
                 if tree.get(&header_file_path).is_none() {
+                    if std::env::var("DEBUG").is_ok() { eprintln!("Adding header file: {:?}", header_file_path) }
                     let header_file = HeaderFile::from_path(&header_file_path, tu);
                     tree.insert(header_file);
                 }

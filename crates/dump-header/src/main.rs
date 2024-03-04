@@ -1,12 +1,10 @@
 #![allow(dead_code)]
-use clang::{Clang, TranslationUnit};
+use clang::Clang;
 use headerfiletree::HeaderFile;
-use serde::Serialize;
 use std::env;
-use std::fs::File;
-use std::io::{self, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
+use crate::framework::FrameworkUnit;
 use crate::headerfiletree::HeaderFileTree;
 
 mod entity;
@@ -16,9 +14,9 @@ mod parser;
 mod typ;
 
 // TODO
-// - framework 
+// - framework
 // - header file を作って parse して framework tree を生成する
-// - framework の dependencies 
+// - framework の dependencies
 // - cli
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -35,7 +33,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
     println!("{:?}", HeaderFileTree::from_root_path(&filename, &tu));
-    call_save_to_file(&tu, &filename);
+    println!(
+        "{:?}",
+        FrameworkUnit::with_parser("Foundation", &parser)?.root_header_file_path()
+    );
+    let header_file_entry = HeaderFile::from_path(&filename, &tu);
+    header_file_entry.save(Path::new("./point.json")).unwrap();
     Ok(())
 }
 
@@ -53,18 +56,4 @@ fn pretty_print_entity(entity: &clang::Entity, depth: usize) {
     entity.get_children().iter().for_each(|entity| {
         pretty_print_entity(entity, depth + 1);
     });
-}
-
-fn call_save_to_file(tu: &TranslationUnit, current_filename: &PathBuf) {
-    let header_file_entry = HeaderFile::from_path(current_filename, tu);
-    save_to_file(&header_file_entry, "point.json").unwrap();
-}
-
-fn save_to_file<T: Serialize>(data: &T, filename: &str) -> io::Result<()> {
-    let json_data = serde_json::to_string_pretty(data)?;
-
-    let mut file = File::create(filename)?;
-    file.write_all(json_data.as_bytes())?;
-
-    Ok(())
 }
