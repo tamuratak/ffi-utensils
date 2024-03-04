@@ -12,6 +12,7 @@ mod framework;
 mod headerfiletree;
 mod parser;
 mod typ;
+mod utils;
 
 // TODO
 // - framework
@@ -38,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "{:?}",
-        FrameworkUnit::with_parser("Foundation", &parser)?.root_header()
+        FrameworkUnit::with_parser("Foundation", &parser)?
     );
     let header_file_entry = HeaderFile::from_path(&filename, &tu);
     header_file_entry.save(Path::new("./point.json")).unwrap();

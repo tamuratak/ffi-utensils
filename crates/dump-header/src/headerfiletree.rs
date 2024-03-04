@@ -6,6 +6,7 @@ use clang::TranslationUnit;
 use serde::{Deserialize, Serialize};
 
 use crate::entity::{convert_entity, Entry};
+use crate::utils::{get_file_location_path, is_in_file};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HeaderFile {
@@ -133,16 +134,4 @@ impl<'a> HeaderFileNode<'a> {
             .map(|hf| HeaderFileNode::new(hf, self.path_entry_hash_map))
             .collect()
     }
-}
-
-fn is_in_file(entity: &clang::Entity, filename: &PathBuf) -> bool {
-    get_file_location_path(entity)
-        .map(|p| p == *filename)
-        .unwrap_or(false)
-}
-
-pub fn get_file_location_path(entity: &clang::Entity) -> Option<PathBuf> {
-    entity
-        .get_location()
-        .map(|sl| PathBuf::from(sl.get_presumed_location().0))
 }
