@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use clang::{Clang, TranslationUnit};
 use headerfiletree::HeaderFile;
 use serde::Serialize;
