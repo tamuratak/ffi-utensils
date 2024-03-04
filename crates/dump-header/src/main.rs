@@ -32,10 +32,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             pretty_print_entity(entity, 0);
         }
     });
-    println!("{:?}", HeaderFileTree::from_root_path(&filename, &tu));
     println!(
         "{:?}",
-        FrameworkUnit::with_parser("Foundation", &parser)?.root_header_file_path()
+        HeaderFileTree::from_root_header(&filename, &tu, |_| true)
+    );
+    println!(
+        "{:?}",
+        FrameworkUnit::with_parser("Foundation", &parser)?.root_header()
     );
     let header_file_entry = HeaderFile::from_path(&filename, &tu);
     header_file_entry.save(Path::new("./point.json")).unwrap();

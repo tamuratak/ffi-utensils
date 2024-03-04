@@ -1,6 +1,6 @@
 use std::io::Write;
-use std::{collections::HashMap, path::Path};
 use std::path::PathBuf;
+use std::{collections::HashMap, path::Path};
 
 use clang::TranslationUnit;
 use serde::{Deserialize, Serialize};
@@ -62,12 +62,17 @@ impl HeaderFileTree {
         }
     }
 
-    pub fn from_root_path(root_path: &Path, tu: &TranslationUnit) -> Self {
-        let mut tree = Self::new(root_path);
+    pub fn from_root_header<F>(root_header: &Path, tu: &TranslationUnit, include: F) -> Self
+    where
+        F: Fn(&Path) -> bool,
+    {
+        let mut tree = Self::new(root_header);
         tu.get_entity().get_children().iter().for_each(|entity| {
             if let Some(header_file_path) = get_file_location_path(entity) {
-                if tree.get(&header_file_path).is_none() {
-                    if std::env::var("DEBUG").is_ok() { eprintln!("Adding header file: {:?}", header_file_path) }
+                if tree.get(&header_file_path).is_none() && include(&header_file_path) {
+                    if std::env::var("DEBUG").is_ok() {
+                        eprintln!("Adding header file: {:?}", header_file_path)
+                    }
                     let header_file = HeaderFile::from_path(&header_file_path, tu);
                     tree.insert(header_file);
                 }
