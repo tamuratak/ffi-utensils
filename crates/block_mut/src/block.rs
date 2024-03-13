@@ -4,8 +4,7 @@ use core::ptr::NonNull;
 
 use crate::abi::BlockHeader;
 use crate::debug::debug_block_header;
-use crate::box_block::block_copy_fail;
-use crate::{BlockFn, BoxBlock};
+use crate::BlockFn;
 
 /// An opaque type that holds an Objective-C block.
 ///

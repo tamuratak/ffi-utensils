@@ -124,12 +124,6 @@ fn rc_new_fail() -> ! {
     panic!("failed creating RcBlock")
 }
 
-// Intentionally not `#[track_caller]`, see above.
-pub(crate) fn block_copy_fail() -> ! {
-    // This likely means the system is out of memory.
-    panic!("failed copying Block")
-}
-
 impl<F: ?Sized> Deref for BoxBlock<F> {
     type Target = Block<F>;
 
