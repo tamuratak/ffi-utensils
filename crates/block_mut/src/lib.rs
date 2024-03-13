@@ -11,10 +11,10 @@
 //!
 //! | `block2` type                            | Equivalent Rust type  |
 //! | ---------------------------------------- | --------------------- |
-//! | `&Block<dyn Fn() + 'a>`                  | `&dyn Fn() + 'a`      |
-//! | `RcBlock<dyn Fn() + 'a>`                 | `Arc<dyn Fn() + 'a>`  |
-//! | `StackBlock<'a, (), (), impl Fn() + 'a>` | `impl Fn() + 'a`      |
-//! | `GlobalBlock<dyn Fn()>`                  | [`fn` item]           |
+//! | `&Block<dyn FnMut() + 'a>`                  | `&dyn FnMut() + 'a`      |
+//! | `RcBlock<dyn FnMut() + 'a>`                 | `Arc<dyn FnMut() + 'a>`  |
+//! | `StackBlock<'a, (), (), impl FnMut() + 'a>` | `impl FnMut() + 'a`      |
+//! | `GlobalBlock<dyn FnMut()>`                  | [`fn` item]           |
 //!
 //! For more information on the specifics of the block implementation, see the
 //! [C language specification][lang] and the [ABI specification][ABI].
@@ -27,7 +27,7 @@
 //! ## External functions using blocks
 //!
 //! To declare external functions or methods that takes blocks, use
-//! `&Block<dyn Fn(Params) -> R>` or `Option<&Block<dyn Fn(Args) -> R>>`,
+//! `&Block<dyn FnMut(Params) -> R>` or `Option<&Block<dyn FnMut(Args) -> R>>`,
 //! where `Params` is the parameter types, and `R` is the return type.
 //!
 //! In the next few examples, we're going to work with a function
@@ -52,38 +52,12 @@
 //! use block2::Block;
 //!
 //! extern "C" {
-//!     fn check_addition(block: &Block<dyn Fn(i32, i32) -> i32>);
+//!     fn check_addition(block: &Block<dyn FnMut(i32, i32) -> i32>);
 //! }
 //! ```
 //!
-//! This can similarly be done inside external methods declared with
-//! [`objc2::extern_methods!`].
-//!
-//! ```
-//! use block2::Block;
-//! use objc2::extern_methods;
-//! #
-//! # use objc2::ClassType;
-//! # objc2::extern_class!(
-//! #     struct MyClass;
-//! #
-//! #     unsafe impl ClassType for MyClass {
-//! #         type Super = objc2::runtime::NSObject;
-//! #         type Mutability = objc2::mutability::InteriorMutable;
-//! #         const NAME: &'static str = "NSObject";
-//! #     }
-//! # );
-//!
-//! extern_methods!(
-//!     unsafe impl MyClass {
-//!         #[method(checkAddition:)]
-//!         pub fn checkAddition(&self, block: &Block<dyn Fn(i32, i32) -> i32>);
-//!     }
-//! );
-//! ```
-//!
 //! If the function/method allowed passing `NULL` blocks, the type would be
-//! `Option<&Block<dyn Fn(i32, i32) -> i32>>` instead.
+//! `Option<&Block<dyn FnMut(i32, i32) -> i32>>` instead.
 //!
 //!
 //! ## Invoking blocks
@@ -96,7 +70,7 @@
 //! use block2::Block;
 //!
 //! #[no_mangle]
-//! extern "C" fn check_addition(block: &Block<dyn Fn(i32, i32) -> i32>) {
+//! extern "C" fn check_addition(block: &Block<dyn FnMut(i32, i32) -> i32>) {
 //!     assert_eq!(block.call((5, 8)), 13);
 //! }
 //! ```
@@ -115,13 +89,13 @@
 //! closure using [`RcBlock::new`].
 //!
 //! ```
-//! use block2::RcBlock;
+//! use block2::BoxBlock;
 //! #
-//! # extern "C" fn check_addition(block: &block2::Block<dyn Fn(i32, i32) -> i32>) {
+//! # extern "C" fn check_addition(block: &block2::Block<dyn FnMut(i32, i32) -> i32>) {
 //! #     assert_eq!(block.call((5, 8)), 13);
 //! # }
 //!
-//! let block = RcBlock::new(|a, b| a + b);
+//! let block = BoxBlock::new(|a, b| a + b);
 //! check_addition(&block);
 //! ```
 //!
@@ -135,7 +109,7 @@
 //! ```
 //! use block2::StackBlock;
 //! #
-//! # extern "C" fn check_addition(block: &block2::Block<dyn Fn(i32, i32) -> i32>) {
+//! # extern "C" fn check_addition(block: &block2::Block<dyn FnMut(i32, i32) -> i32>) {
 //! #     assert_eq!(block.call((5, 8)), 13);
 //! # }
 //!
@@ -150,7 +124,7 @@
 //! ```
 //! use block2::global_block;
 //! #
-//! # extern "C" fn check_addition(block: &block2::Block<dyn Fn(i32, i32) -> i32>) {
+//! # extern "C" fn check_addition(block: &block2::Block<dyn FnMut(i32, i32) -> i32>) {
 //! #     assert_eq!(block.call((5, 8)), 13);
 //! # }
 //!
@@ -171,9 +145,9 @@
 //!
 //! The most important one is the lifetime of the block's data, i.e. the
 //! lifetime of the data in the closure contained in the block. This lifetime
-//! can be specified as `'f` in `&Block<dyn Fn() + 'f>`.
+//! can be specified as `'f` in `&Block<dyn FnMut() + 'f>`.
 //!
-//! Note that `&Block<dyn Fn()>`, without any lifetime specifier, can be a bit
+//! Note that `&Block<dyn FnMut()>`, without any lifetime specifier, can be a bit
 //! confusing, as the default depends on where it is typed. In function/method
 //! signatures, it defaults to `'static`, but as the type of e.g. a `let`
 //! binding, the lifetime may be inferred to be something smaller, see [the
@@ -181,13 +155,13 @@
 //! `+ 'static` or `+ '_` to force an escaping or non-escaping block.
 //!
 //! Another lifetime is the lifetime of the currently held pointer, i.e. `'b`
-//! in `&'b Block<dyn Fn()>`. This lifetime can be safely extended using
+//! in `&'b Block<dyn FnMut()>`. This lifetime can be safely extended using
 //! [`Block::copy`], so should prove to be little trouble (of course the
 //! lifetime still can't be extended past the lifetime of the captured data
 //! above).
 //!
 //! Finally, the block's parameter and return types can also contain
-//! lifetimes, as `'a` and `'r` in `&Block<dyn Fn(&'a i32) -> &'r u32>`.
+//! lifetimes, as `'a` and `'r` in `&Block<dyn FnMut(&'a i32) -> &'r u32>`.
 //! Unfortunately, these lifetimes are quite problematic and unsupported at
 //! the moment, due to Rust trait limitations regarding higher-ranked trait
 //! bounds. If you run into problems with this in a block that takes or
@@ -363,24 +337,18 @@ compile_error!("ObjFW is not yet supported");
 #[cfg_attr(feature = "unstable-objfw", link(name = "objfw", kind = "dylib"))]
 extern "C" {}
 
-// Don't link to anything on GNUStep; objc2 already does that for us!
-//
-// We do want to ensure linkage actually happens, though.
-#[cfg(feature = "gnustep-1-7")]
-extern crate objc2 as _;
-
 mod abi;
 mod block;
 mod debug;
 pub mod ffi;
 mod global;
-mod rc_block;
+mod box_block;
 mod stack;
 mod traits;
 
 pub use self::block::Block;
 pub use self::global::GlobalBlock;
-pub use self::rc_block::RcBlock;
+pub use self::box_block::BoxBlock;
 pub use self::stack::StackBlock;
 pub use self::traits::{BlockFn, IntoBlock};
 

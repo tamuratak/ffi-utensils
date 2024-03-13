@@ -2,12 +2,10 @@ use core::fmt;
 use core::marker::PhantomData;
 use core::ptr::NonNull;
 
-use objc2::encode::{Encoding, RefEncode};
-
 use crate::abi::BlockHeader;
 use crate::debug::debug_block_header;
-use crate::rc_block::block_copy_fail;
-use crate::{BlockFn, RcBlock};
+use crate::box_block::block_copy_fail;
+use crate::{BlockFn, BoxBlock};
 
 /// An opaque type that holds an Objective-C block.
 ///
@@ -15,11 +13,11 @@ use crate::{BlockFn, RcBlock};
 /// the [`BlockFn`] trait (which means parameter and return types must be
 /// "encodable"), and describes the parameter and return types of the block.
 ///
-/// For example, you may have the type `Block<dyn Fn(u8, u8) -> i32>`, and
+/// For example, you may have the type `Block<dyn FnMut(u8, u8) -> i32>`, and
 /// that would be a `'static` block that takes two `u8`s, and returns an
 /// `i32`.
 ///
-/// If you want the block to carry a lifetime, use `Block<dyn Fn() + 'a>`,
+/// If you want the block to carry a lifetime, use `Block<dyn FnMut() + 'a>`,
 /// just like you'd usually do with `dyn Fn`.
 ///
 /// [`dyn`]: https://doc.rust-lang.org/std/keyword.dyn.html
@@ -30,7 +28,7 @@ use crate::{BlockFn, RcBlock};
 /// This is intented to be an `extern type`, and as such the memory layout of
 /// this type is _not_ guaranteed. That said, **pointers** to this type are
 /// always thin, and match that of Objective-C blocks. So the layout of e.g.
-/// `&Block<dyn Fn(...) -> ... + '_>` is defined, and guaranteed to be
+/// `&Block<dyn FnMut(...) -> ... + '_>` is defined, and guaranteed to be
 /// pointer-sized and ABI-compatible with a block pointer.
 ///
 ///
@@ -59,41 +57,12 @@ pub struct Block<F: ?Sized> {
     _p: PhantomData<F>,
 }
 
-// SAFETY: Pointers to `Block` is an Objective-C block.
-// This is only valid when `F: BlockFn`, as that bounds the parameters and
-// return type to be encodable too.
-unsafe impl<F: ?Sized + BlockFn> RefEncode for Block<F> {
-    const ENCODING_REF: Encoding = Encoding::Block;
-}
-
 impl<F: ?Sized> Block<F> {
     fn header(&self) -> &BlockHeader {
         let ptr: NonNull<Self> = NonNull::from(self);
         let ptr: NonNull<BlockHeader> = ptr.cast();
         // SAFETY: `Block` is `BlockHeader` + closure
         unsafe { ptr.as_ref() }
-    }
-
-    /// Copy the block onto the heap as an [`RcBlock`].
-    ///
-    /// The behaviour of this function depends on whether the block is from a
-    /// [`RcBlock`] or a [`StackBlock`]. In the former case, it will bump the
-    /// reference-count (just as-if you'd `Clone`'d the `RcBlock`), in the
-    /// latter case it will construct a new `RcBlock` from the `StackBlock`.
-    ///
-    /// This distiction should not matter, except for micro-optimizations.
-    ///
-    /// [`StackBlock`]: crate::StackBlock
-    #[doc(alias = "Block_copy")]
-    #[doc(alias = "_Block_copy")]
-    #[inline]
-    pub fn copy(&self) -> RcBlock<F> {
-        let ptr: *const Self = self;
-        let ptr: *mut Block<F> = ptr as *mut _;
-        // SAFETY: The lifetime of the block is extended from `&self` to that
-        // of the `RcBlock`, which is fine, because the lifetime of the
-        // contained closure `F` is still carried along to the `RcBlock`.
-        unsafe { RcBlock::copy(ptr) }.unwrap_or_else(|| block_copy_fail())
     }
 
     /// Call the block.
@@ -130,7 +99,7 @@ mod tests {
     use core::cell::Cell;
     use core::sync::atomic::{AtomicUsize, Ordering};
 
-    use crate::RcBlock;
+    use crate::BoxBlock;
 
     use super::*;
 
@@ -139,22 +108,22 @@ mod tests {
     /// <https://doc.rust-lang.org/nightly/reference/lifetime-elision.html#default-trait-object-lifetimes>
     #[test]
     fn test_rust_dyn_lifetime_semantics() {
-        fn takes_static(block: &Block<dyn Fn() + 'static>) {
+        fn takes_static(block: &Block<dyn FnMut() + 'static>) {
             block.call(());
         }
 
-        fn takes_elided(block: &Block<dyn Fn() + '_>) {
+        fn takes_elided(block: &Block<dyn FnMut() + '_>) {
             block.call(());
         }
 
-        fn takes_unspecified(block: &Block<dyn Fn()>) {
+        fn takes_unspecified(block: &Block<dyn FnMut()>) {
             block.call(());
         }
 
         // Static lifetime
         static MY_STATIC: AtomicUsize = AtomicUsize::new(0);
         MY_STATIC.store(0, Ordering::Relaxed);
-        let static_lifetime: RcBlock<dyn Fn() + 'static> = RcBlock::new(|| {
+        let static_lifetime: BoxBlock<dyn FnMut() + 'static> = BoxBlock::new(|| {
             MY_STATIC.fetch_add(1, Ordering::Relaxed);
         });
         takes_static(&static_lifetime);
@@ -164,7 +133,7 @@ mod tests {
 
         // Lifetime declared with `'_`
         let captured = Cell::new(0);
-        let elided_lifetime: RcBlock<dyn Fn() + '_> = RcBlock::new(|| {
+        let elided_lifetime: BoxBlock<dyn FnMut() + '_> = BoxBlock::new(|| {
             captured.set(captured.get() + 1);
         });
         // takes_static(&elided_lifetime); // Compile error
@@ -174,7 +143,7 @@ mod tests {
 
         // Lifetime kept unspecified
         let captured = Cell::new(0);
-        let unspecified_lifetime: RcBlock<dyn Fn()> = RcBlock::new(|| {
+        let unspecified_lifetime: BoxBlock<dyn FnMut()> = BoxBlock::new(|| {
             captured.set(captured.get() + 1);
         });
         // takes_static(&unspecified_lifetime); // Compile error
@@ -184,22 +153,22 @@ mod tests {
     }
 
     #[allow(dead_code)]
-    fn unspecified_in_fn_is_static(block: &Block<dyn Fn()>) -> &Block<dyn Fn() + 'static> {
+    fn unspecified_in_fn_is_static(block: &Block<dyn FnMut()>) -> &Block<dyn FnMut() + 'static> {
         block
     }
 
     #[allow(dead_code)]
-    fn lending_block<'b>(block: &Block<dyn Fn() -> &'b i32 + 'b>) {
+    fn lending_block<'b>(block: &Block<dyn FnMut() -> &'b i32 + 'b>) {
         let _ = *block.call(());
     }
 
     #[allow(dead_code)]
-    fn takes_lifetime(_: &Block<dyn Fn(&i32) -> &i32>) {
+    fn takes_lifetime(_: &Block<dyn FnMut(&i32) -> &i32>) {
         // Not actually callable yet
     }
 
     #[allow(dead_code)]
-    fn covariant<'b, 'f>(b: &'b Block<dyn Fn() + 'static>) -> &'b Block<dyn Fn() + 'f> {
+    fn covariant<'b, 'f>(b: &'b Block<dyn FnMut() + 'static>) -> &'b Block<dyn FnMut() + 'f> {
         b
     }
 }

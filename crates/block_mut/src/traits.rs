@@ -1,9 +1,6 @@
 use core::mem;
 use core::ptr;
 
-use objc2::encode::EncodeArguments;
-use objc2::encode::{EncodeArgument, EncodeReturn};
-
 use crate::{Block, StackBlock};
 
 mod private {
@@ -26,10 +23,10 @@ mod private {
 /// issue if you know a use-case where this restrition should be lifted!
 pub unsafe trait BlockFn: private::Sealed<Self::Args, Self::Output> {
     /// The parameters/arguments to the block.
-    type Args: EncodeArguments;
+    type Args;
 
     /// The return type of the block.
-    type Output: EncodeReturn;
+    type Output;
 
     /// Calls the given invoke function with the block and arguments.
     #[doc(hidden)]
@@ -52,11 +49,11 @@ pub unsafe trait BlockFn: private::Sealed<Self::Args, Self::Output> {
 /// This is a sealed trait, and should not need to be implemented. Open an
 /// issue if you know a use-case where this restrition should be lifted!
 pub unsafe trait IntoBlock<'f, A, R>: private::Sealed<A, R>
-where
-    A: EncodeArguments,
-    R: EncodeReturn,
+// where
+//     A: EncodeArguments,
+//    R: EncodeReturn,
 {
-    /// The type-erased `dyn Fn(...Args) -> R + 'f`.
+    /// The type-erased `dyn FnMut(...Args) -> R + 'f`.
     type Dyn: ?Sized + BlockFn<Args = A, Output = R>;
 
     #[doc(hidden)]
@@ -65,13 +62,13 @@ where
 
 macro_rules! impl_traits {
     ($($a:ident: $t:ident),*) => (
-        impl<$($t: EncodeArgument,)* R: EncodeReturn, Closure> private::Sealed<($($t,)*), R> for Closure
+        impl<$($t,)* R, Closure> private::Sealed<($($t,)*), R> for Closure
         where
-            Closure: ?Sized + Fn($($t),*) -> R,
+            Closure: ?Sized + FnMut($($t),*) -> R,
         {}
 
         // TODO: Add `+ Send`, `+ Sync` and `+ Send + Sync` versions.
-        unsafe impl<$($t: EncodeArgument,)* R: EncodeReturn> BlockFn for dyn Fn($($t),*) -> R + '_ {
+        unsafe impl<$($t,)* R> BlockFn for dyn FnMut($($t),*) -> R + '_ {
             type Args = ($($t,)*);
             type Output = R;
 
@@ -92,11 +89,9 @@ macro_rules! impl_traits {
 
         unsafe impl<'f, $($t,)* R, Closure> IntoBlock<'f, ($($t,)*), R> for Closure
         where
-            $($t: EncodeArgument,)*
-            R: EncodeReturn,
-            Closure: Fn($($t),*) -> R + 'f,
+            Closure: FnMut($($t),*) -> R + 'f,
         {
-            type Dyn = dyn Fn($($t),*) -> R + 'f;
+            type Dyn = dyn FnMut($($t),*) -> R + 'f;
 
             #[inline]
             fn __get_invoke_stack_block() -> unsafe extern "C" fn() {
@@ -105,9 +100,9 @@ macro_rules! impl_traits {
                     $($a: $t,)*
                 ) -> R
                 where
-                    Closure: Fn($($t),*) -> R + 'f
+                    Closure: FnMut($($t),*) -> R + 'f
                 {
-                    let closure = unsafe { &*ptr::addr_of!((*block).closure) };
+                    let closure = unsafe { &mut *(ptr::addr_of!((*block).closure) as *mut Closure)};
                     (closure)($($a),*)
                 }
 

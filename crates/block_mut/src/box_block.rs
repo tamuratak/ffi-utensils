@@ -3,8 +3,6 @@ use core::mem::ManuallyDrop;
 use core::ops::Deref;
 use core::ptr::NonNull;
 
-use objc2::encode::{EncodeArguments, EncodeReturn};
-
 use crate::abi::BlockHeader;
 use crate::debug::debug_block_header;
 use crate::{ffi, Block, IntoBlock, StackBlock};
@@ -29,12 +27,12 @@ use crate::{ffi, Block, IntoBlock, StackBlock};
 /// `Option<RcBlock<A, R>>` is guaranteed to have the same size as
 /// `RcBlock<A, R>`.
 #[doc(alias = "MallocBlock")]
-pub struct RcBlock<F: ?Sized> {
+pub struct BoxBlock<F: ?Sized> {
     // Covariant
     ptr: NonNull<Block<F>>,
 }
 
-impl<F: ?Sized> RcBlock<F> {
+impl<F: ?Sized> BoxBlock<F> {
     /// Construct an `RcBlock` from the given block pointer by taking
     /// ownership.
     ///
@@ -76,7 +74,7 @@ impl<F: ?Sized> RcBlock<F> {
     #[doc(alias = "Block_copy")]
     #[doc(alias = "_Block_copy")]
     #[inline]
-    pub unsafe fn copy(ptr: *mut Block<F>) -> Option<Self> {
+    unsafe fn copy(ptr: *mut Block<F>) -> Option<Self> {
         let ptr: *mut Block<F> = unsafe { ffi::_Block_copy(ptr.cast()) }.cast();
         // SAFETY: We just copied the block, so the reference count is +1
         unsafe { Self::from_raw(ptr) }
@@ -84,7 +82,7 @@ impl<F: ?Sized> RcBlock<F> {
 }
 
 // TODO: Move so this appears first in the docs.
-impl<F: ?Sized> RcBlock<F> {
+impl<F: ?Sized> BoxBlock<F> {
     /// Construct a `RcBlock` with the given closure.
     ///
     /// The closure will be coped to the heap on construction.
@@ -96,8 +94,6 @@ impl<F: ?Sized> RcBlock<F> {
     // benefit from not being so.
     pub fn new<'f, A, R, Closure>(closure: Closure) -> Self
     where
-        A: EncodeArguments,
-        R: EncodeReturn,
         Closure: IntoBlock<'f, A, R, Dyn = F>,
     {
         // SAFETY: The stack block is copied once below.
@@ -121,20 +117,6 @@ impl<F: ?Sized> RcBlock<F> {
     }
 }
 
-impl<F: ?Sized> Clone for RcBlock<F> {
-    /// Increase the reference-count of the block.
-    #[doc(alias = "Block_copy")]
-    #[doc(alias = "_Block_copy")]
-    #[inline]
-    fn clone(&self) -> Self {
-        // SAFETY: The block pointer is valid, and its safety invariant is
-        // upheld, since the only way to get an `RcBlock` in the first place
-        // is through unsafe functions that requires these preconditions to be
-        // upheld.
-        unsafe { Self::copy(self.ptr.as_ptr()) }.unwrap_or_else(|| rc_clone_fail())
-    }
-}
-
 // Intentionally not `#[track_caller]`, to keep the code-size smaller (as this
 // error is very unlikely).
 fn rc_new_fail() -> ! {
@@ -148,12 +130,7 @@ pub(crate) fn block_copy_fail() -> ! {
     panic!("failed copying Block")
 }
 
-// Intentionally not `#[track_caller]`, see above.
-fn rc_clone_fail() -> ! {
-    unreachable!("cloning a RcBlock bumps the reference count, which should be infallible")
-}
-
-impl<F: ?Sized> Deref for RcBlock<F> {
+impl<F: ?Sized> Deref for BoxBlock<F> {
     type Target = Block<F>;
 
     #[inline]
@@ -165,7 +142,7 @@ impl<F: ?Sized> Deref for RcBlock<F> {
     }
 }
 
-impl<F: ?Sized> Drop for RcBlock<F> {
+impl<F: ?Sized> Drop for BoxBlock<F> {
     /// Release the block, decreasing the reference-count by 1.
     ///
     /// The `Drop` method of the underlying closure will be called once the
@@ -180,7 +157,7 @@ impl<F: ?Sized> Drop for RcBlock<F> {
     }
 }
 
-impl<F: ?Sized> fmt::Debug for RcBlock<F> {
+impl<F: ?Sized> fmt::Debug for BoxBlock<F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut f = f.debug_struct("RcBlock");
         let header = unsafe { self.ptr.cast::<BlockHeader>().as_ref() };
@@ -198,8 +175,8 @@ mod tests {
 
     #[test]
     fn return_rc_block() {
-        fn get_adder(x: i32) -> RcBlock<dyn Fn(i32) -> i32> {
-            RcBlock::new(move |y| y + x)
+        fn get_adder(x: i32) -> BoxBlock<dyn FnMut(i32) -> i32> {
+            BoxBlock::new(move |y| y + x)
         }
 
         let add2 = get_adder(2);
@@ -210,25 +187,25 @@ mod tests {
     #[test]
     fn rc_block_with_precisely_described_lifetimes() {
         fn args<'a, 'b>(
-            f: impl Fn(&'a i32, &'b i32) + 'static,
-        ) -> RcBlock<dyn Fn(&'a i32, &'b i32) + 'static> {
-            RcBlock::new(f)
+            f: impl FnMut(&'a i32, &'b i32) + 'static,
+        ) -> BoxBlock<dyn FnMut(&'a i32, &'b i32) + 'static> {
+            BoxBlock::new(f)
         }
 
         fn args_return<'a, 'b>(
-            f: impl Fn(&'a i32) -> &'b i32 + 'static,
-        ) -> RcBlock<dyn Fn(&'a i32) -> &'b i32 + 'static> {
-            RcBlock::new(f)
+            f: impl FnMut(&'a i32) -> &'b i32 + 'static,
+        ) -> BoxBlock<dyn FnMut(&'a i32) -> &'b i32 + 'static> {
+            BoxBlock::new(f)
         }
 
-        fn args_entire<'a, 'b>(f: impl Fn(&'a i32) + 'b) -> RcBlock<dyn Fn(&'a i32) + 'b> {
-            RcBlock::new(f)
+        fn args_entire<'a, 'b>(f: impl FnMut(&'a i32) + 'b) -> BoxBlock<dyn FnMut(&'a i32) + 'b> {
+            BoxBlock::new(f)
         }
 
         fn return_entire<'a, 'b>(
-            f: impl Fn() -> &'a i32 + 'b,
-        ) -> RcBlock<dyn Fn() -> &'a i32 + 'b> {
-            RcBlock::new(f)
+            f: impl FnMut() -> &'a i32 + 'b,
+        ) -> BoxBlock<dyn FnMut() -> &'a i32 + 'b> {
+            BoxBlock::new(f)
         }
 
         let _ = args(|_, _| {});
@@ -238,14 +215,14 @@ mod tests {
     }
 
     #[allow(dead_code)]
-    fn covariant<'f>(b: RcBlock<dyn Fn() + 'static>) -> RcBlock<dyn Fn() + 'f> {
+    fn covariant<'f>(b: BoxBlock<dyn FnMut() + 'static>) -> BoxBlock<dyn FnMut() + 'f> {
         b
     }
 
     #[test]
     fn allow_re_entrancy() {
         #[allow(clippy::type_complexity)]
-        let block: Rc<OnceCell<RcBlock<dyn Fn(u32) -> u32>>> = Rc::new(OnceCell::new());
+        let block: Rc<OnceCell<BoxBlock<dyn FnMut(u32) -> u32>>> = Rc::new(OnceCell::new());
 
         let captured_block = block.clone();
         let fibonacci = move |n| {
@@ -257,7 +234,7 @@ mod tests {
             }
         };
 
-        let block = block.get_or_init(|| RcBlock::new(fibonacci));
+        let block = block.get_or_init(|| BoxBlock::new(fibonacci));
 
         assert_eq!(block.call((0,)), 0);
         assert_eq!(block.call((1,)), 1);

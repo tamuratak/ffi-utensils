@@ -128,15 +128,6 @@ impl<F: ?Sized> fmt::Debug for GlobalBlock<F> {
 /// assert_eq!(ADDER_BLOCK.call((5, 7)), 12);
 /// ```
 ///
-/// The following does not compile because [`Box`] is not [`EncodeReturn`]:
-///
-/// ```compile_fail
-/// use block2::global_block;
-/// global_block! {
-///     pub static BLOCK = |b: Box<i32>| {};
-/// }
-/// ```
-///
 /// This also doesn't work (yet), as blocks are overly restrictive about the
 /// lifetimes involved.
 ///
@@ -182,17 +173,17 @@ macro_rules! global_block {
     ) => {
         $(#[$m])*
         #[allow(unused_unsafe)]
-        $vis static $name: $crate::GlobalBlock<dyn Fn($($t),*) $(-> $r)? + 'static> = unsafe {
-            let mut header = $crate::GlobalBlock::<dyn Fn($($t),*) $(-> $r)? + 'static>::__DEFAULT_HEADER;
+        $vis static $name: $crate::GlobalBlock<dyn FnMut($($t),*) $(-> $r)? + 'static> = unsafe {
+            let mut header = $crate::GlobalBlock::<dyn FnMut($($t),*) $(-> $r)? + 'static>::__DEFAULT_HEADER;
             header.isa = ::core::ptr::addr_of!($crate::ffi::_NSConcreteGlobalBlock);
             header.invoke = ::core::option::Option::Some({
-                unsafe extern "C" fn inner(_: *mut $crate::GlobalBlock<dyn Fn($($t),*) $(-> $r)? + 'static>, $($a: $t),*) $(-> $r)? {
+                unsafe extern "C" fn inner(_: *mut $crate::GlobalBlock<dyn FnMut($($t),*) $(-> $r)? + 'static>, $($a: $t),*) $(-> $r)? {
                     $body
                 }
 
                 // TODO: SAFETY
                 ::core::mem::transmute::<
-                    unsafe extern "C" fn(*mut $crate::GlobalBlock<dyn Fn($($t),*) $(-> $r)? + 'static>, $($a: $t),*) $(-> $r)?,
+                    unsafe extern "C" fn(*mut $crate::GlobalBlock<dyn FnMut($($t),*) $(-> $r)? + 'static>, $($a: $t),*) $(-> $r)?,
                     unsafe extern "C" fn(),
                 >(inner)
             });
@@ -288,7 +279,7 @@ mod tests {
     }
 
     #[allow(dead_code)]
-    fn covariant<'f>(b: GlobalBlock<dyn Fn() + 'static>) -> GlobalBlock<dyn Fn() + 'f> {
+    fn covariant<'f>(b: GlobalBlock<dyn FnMut() + 'static>) -> GlobalBlock<dyn FnMut() + 'f> {
         b
     }
 }

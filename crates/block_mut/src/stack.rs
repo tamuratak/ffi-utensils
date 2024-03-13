@@ -7,8 +7,6 @@ use core::panic::{RefUnwindSafe, UnwindSafe};
 use core::ptr::{self, NonNull};
 use std::os::raw::c_ulong;
 
-use objc2::encode::{EncodeArguments, EncodeReturn, Encoding, RefEncode};
-
 use crate::abi::{
     BlockDescriptor, BlockDescriptorCopyDispose, BlockDescriptorPtr, BlockFlags, BlockHeader,
 };
@@ -55,17 +53,6 @@ pub struct StackBlock<'f, A, R, Closure> {
     /// Note that this is not wrapped in a `ManuallyDrop`; once the
     /// `StackBlock` is dropped, the closure will also be dropped.
     pub(crate) closure: Closure,
-}
-
-// SAFETY: Pointers to the stack block is always safe to reintepret as an
-// ordinary block pointer.
-unsafe impl<'f, A, R, Closure> RefEncode for StackBlock<'f, A, R, Closure>
-where
-    A: EncodeArguments,
-    R: EncodeReturn,
-    Closure: IntoBlock<'f, A, R>,
-{
-    const ENCODING_REF: Encoding = Encoding::Block;
 }
 
 // Basic constants and helpers.
@@ -156,8 +143,6 @@ impl<'f, A, R, Closure> StackBlock<'f, A, R, Closure> {
     #[inline]
     pub fn new(closure: Closure) -> Self
     where
-        A: EncodeArguments,
-        R: EncodeReturn,
         Closure: IntoBlock<'f, A, R> + Clone,
     {
         let header = BlockHeader {
@@ -200,8 +185,6 @@ impl<'f, A, R, Closure> StackBlock<'f, A, R, Closure> {
     #[inline]
     pub(crate) unsafe fn new_no_clone(closure: Closure) -> Self
     where
-        A: EncodeArguments,
-        R: EncodeReturn,
         Closure: IntoBlock<'f, A, R>,
     {
         // Don't need to emit copy and dispose helpers if the closure
@@ -238,23 +221,8 @@ impl<'f, A, R, Closure> StackBlock<'f, A, R, Closure> {
     }
 }
 
-impl<'f, A, R, Closure: Clone> Clone for StackBlock<'f, A, R, Closure> {
-    #[inline]
-    fn clone(&self) -> Self {
-        Self {
-            p: PhantomData,
-            header: self.header,
-            closure: self.closure.clone(),
-        }
-    }
-}
-
-impl<'f, A, R, Closure: Copy> Copy for StackBlock<'f, A, R, Closure> {}
-
 impl<'f, A, R, Closure> Deref for StackBlock<'f, A, R, Closure>
 where
-    A: EncodeArguments,
-    R: EncodeReturn,
     Closure: IntoBlock<'f, A, R>,
 {
     type Target = Block<Closure::Dyn>;
