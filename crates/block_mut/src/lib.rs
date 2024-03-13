@@ -1,7 +1,7 @@
 //! # Apple's C language extension of blocks
 //!
 //! C Blocks are functions which capture their environments, i.e. the
-//! C-equivalent of Rust's [`Fn`] closures. As they were originally developed
+//! C-equivalent of Rust's [`FnMut`] closures. As they were originally developed
 //! by Apple, they're often used in Objective-C code. This crate provides
 //! capabilities to create, manage and invoke these blocks, in an ergonomic,
 //! "Rust-centric" fashion.
@@ -12,7 +12,7 @@
 //! | `block2` type                            | Equivalent Rust type  |
 //! | ---------------------------------------- | --------------------- |
 //! | `&Block<dyn FnMut() + 'a>`                  | `&dyn FnMut() + 'a`      |
-//! | `RcBlock<dyn FnMut() + 'a>`                 | `Arc<dyn FnMut() + 'a>`  |
+//! | `BoxBlock<dyn FnMut() + 'a>`                 | `Box<dyn FnMut() + 'a>`  |
 //! | `StackBlock<'a, (), (), impl FnMut() + 'a>` | `impl FnMut() + 'a`      |
 //! | `GlobalBlock<dyn FnMut()>`                  | [`fn` item]           |
 //!
@@ -81,12 +81,12 @@
 //!
 //! ## Creating blocks
 //!
-//! Creating a block to pass to Objective-C can be done with [`RcBlock`] or
+//! Creating a block to pass to Objective-C can be done with [`BoxBlock`] or
 //! [`StackBlock`], depending on if you want to move the block to the heap,
 //! or let the callee decide if it needs to do that.
 //!
 //! To call such a function / method, we could create a new block from a
-//! closure using [`RcBlock::new`].
+//! closure using [`BoxBlock::new`].
 //!
 //! ```
 //! use block2::BoxBlock;

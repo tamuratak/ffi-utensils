@@ -11,7 +11,7 @@ use crate::{ffi, Block, IntoBlock, StackBlock};
 ///
 /// This is a smart pointer that [`Deref`]s to [`Block`].
 ///
-/// The generic type `F` must be a [`dyn`] [`Fn`] that implements the
+/// The generic type `F` must be a [`dyn`] [`FnMut`] that implements the
 /// [`BlockFn`] trait, just like described in [`Block`]'s documentation.
 ///
 /// [`dyn`]: https://doc.rust-lang.org/std/keyword.dyn.html
@@ -24,8 +24,8 @@ use crate::{ffi, Block, IntoBlock, StackBlock};
 /// block (i.e. same size as `*const Block<A, R>`).
 ///
 /// Additionally, it participates in the null-pointer optimization, that is,
-/// `Option<RcBlock<A, R>>` is guaranteed to have the same size as
-/// `RcBlock<A, R>`.
+/// `Option<BoxBlock<A, R>>` is guaranteed to have the same size as
+/// `BoxBlock<A, R>`.
 #[doc(alias = "MallocBlock")]
 pub struct BoxBlock<F: ?Sized> {
     // Covariant
@@ -33,7 +33,7 @@ pub struct BoxBlock<F: ?Sized> {
 }
 
 impl<F: ?Sized> BoxBlock<F> {
-    /// Construct an `RcBlock` from the given block pointer by taking
+    /// Construct an `BoxBlock` from the given block pointer by taking
     /// ownership.
     ///
     /// This will return `None` if the pointer is NULL.
@@ -52,7 +52,7 @@ impl<F: ?Sized> BoxBlock<F> {
         NonNull::new(ptr).map(|ptr| Self { ptr })
     }
 
-    /// Construct an `RcBlock` from the given block pointer.
+    /// Construct an `BoxBlock` from the given block pointer.
     ///
     /// The block will be copied, and have its reference-count increased by
     /// one.
@@ -83,7 +83,7 @@ impl<F: ?Sized> BoxBlock<F> {
 
 // TODO: Move so this appears first in the docs.
 impl<F: ?Sized> BoxBlock<F> {
-    /// Construct a `RcBlock` with the given closure.
+    /// Construct a `BoxBlock` with the given closure.
     ///
     /// The closure will be coped to the heap on construction.
     ///
@@ -121,7 +121,7 @@ impl<F: ?Sized> BoxBlock<F> {
 // error is very unlikely).
 fn rc_new_fail() -> ! {
     // This likely means the system is out of memory.
-    panic!("failed creating RcBlock")
+    panic!("failed creating BoxBlock")
 }
 
 impl<F: ?Sized> Deref for BoxBlock<F> {
@@ -130,7 +130,7 @@ impl<F: ?Sized> Deref for BoxBlock<F> {
     #[inline]
     fn deref(&self) -> &Block<F> {
         // SAFETY: The pointer is valid, as ensured by creation methods, and
-        // will be so for as long as the `RcBlock` is, since that holds +1
+        // will be so for as long as the `BoxBlock` is, since that holds +1
         // reference count.
         unsafe { self.ptr.as_ref() }
     }
@@ -153,7 +153,7 @@ impl<F: ?Sized> Drop for BoxBlock<F> {
 
 impl<F: ?Sized> fmt::Debug for BoxBlock<F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut f = f.debug_struct("RcBlock");
+        let mut f = f.debug_struct("BoxBlock");
         let header = unsafe { self.ptr.cast::<BlockHeader>().as_ref() };
         debug_block_header(header, &mut f);
         f.finish_non_exhaustive()

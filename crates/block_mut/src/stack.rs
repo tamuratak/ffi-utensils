@@ -38,7 +38,7 @@ use crate::{ffi, Block, IntoBlock};
 /// The memory layout of this type is _not_ guaranteed.
 ///
 /// That said, it will always be safe to reintepret pointers to this as a
-/// pointer to a [`Block`] with the corresponding `dyn Fn` type.
+/// pointer to a [`Block`] with the corresponding `dyn FnMut` type.
 #[repr(C)]
 pub struct StackBlock<'f, A, R, Closure> {
     /// For correct variance of the other type parameters.
@@ -134,12 +134,12 @@ impl<'f, A, R, Closure> StackBlock<'f, A, R, Closure> {
     ///
     /// Note that this requires [`Clone`], as a C block is generally assumed
     /// to be copy-able. If you want to avoid that, put the block directly on
-    /// the heap using [`RcBlock::new`].
+    /// the heap using [`BoxBlock::new`].
     ///
     /// When the block is called, it will return the value that results from
     /// calling the closure.
     ///
-    /// [`RcBlock::new`]: crate::RcBlock::new
+    /// [`BoxBlock::new`]: crate::BoxBlock::new
     #[inline]
     pub fn new(closure: Closure) -> Self
     where
@@ -165,11 +165,11 @@ impl<'f, A, R, Closure> StackBlock<'f, A, R, Closure> {
     }
 }
 
-// `RcBlock::new`
+// `BoxBlock::new`
 impl<'f, A, R, Closure> StackBlock<'f, A, R, Closure> {
     unsafe extern "C" fn empty_clone_closure(_dst: *mut c_void, _src: *const c_void) {
         // We do nothing, the closure has been `memmove`'d already, and
-        // ownership will be passed in `RcBlock::new`.
+        // ownership will be passed in `BoxBlock::new`.
     }
 
     const DESCRIPTOR_WITH_DROP: BlockDescriptorCopyDispose = BlockDescriptorCopyDispose {

@@ -8,7 +8,7 @@ use crate::BlockFn;
 
 /// An opaque type that holds an Objective-C block.
 ///
-/// The generic type `F` must be a [`dyn`] [`Fn`] that implements
+/// The generic type `F` must be a [`dyn`] [`FnMut`] that implements
 /// the [`BlockFn`] trait (which means parameter and return types must be
 /// "encodable"), and describes the parameter and return types of the block.
 ///
@@ -17,7 +17,7 @@ use crate::BlockFn;
 /// `i32`.
 ///
 /// If you want the block to carry a lifetime, use `Block<dyn FnMut() + 'a>`,
-/// just like you'd usually do with `dyn Fn`.
+/// just like you'd usually do with `dyn FnMut`.
 ///
 /// [`dyn`]: https://doc.rust-lang.org/std/keyword.dyn.html
 ///
@@ -79,7 +79,7 @@ impl<F: ?Sized> Block<F> {
         let ptr: NonNull<Self> = NonNull::from(self);
         let ptr: *mut Self = ptr.as_ptr();
 
-        // SAFETY: The closure is an `Fn`, and as such is safe to call from an
+        // SAFETY: The closure is an `FnMut`, and as such is safe to call from an
         // immutable reference.
         unsafe { F::__call_block(invoke, ptr, args) }
     }

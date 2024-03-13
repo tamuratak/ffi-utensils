@@ -99,13 +99,7 @@ impl<F: ?Sized> fmt::Debug for GlobalBlock<F> {
 /// Construct a static [`GlobalBlock`].
 ///
 /// The syntax is similar to a static closure (except that all types have to
-/// be specified). Note that the block cannot capture its environment, its
-/// parameter types must be [`EncodeArgument`] and the return type must be
-/// [`EncodeReturn`].
-///
-/// [`EncodeArgument`]: objc2::encode::EncodeArgument
-/// [`EncodeReturn`]: objc2::encode::EncodeReturn
-///
+/// be specified). Note that the block cannot capture its environment.
 /// # Examples
 ///
 /// ```

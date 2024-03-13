@@ -10,9 +10,7 @@ mod private {
 /// Types that represent closure parameters/arguments and return types in a
 /// block.
 ///
-/// This is implemented for [`dyn`] [`Fn`] closures with up to 12 parameters,
-/// where each parameter implements [`EncodeArgument`] and the return type
-/// implements [`EncodeReturn`].
+/// This is implemented for [`dyn`] [`FnMut`] closures with up to 12 parameters.
 ///
 /// [`dyn`]: https://doc.rust-lang.org/std/keyword.dyn.html
 ///
@@ -39,9 +37,7 @@ pub unsafe trait BlockFn: private::Sealed<Self::Args, Self::Output> {
 
 /// Types that may be converted into a block.
 ///
-/// This is implemented for [`Fn`] closures of up to 12 parameters, where each
-/// parameter implements [`EncodeArgument`] and the return type implements
-/// [`EncodeReturn`].
+/// This is implemented for [`FnMut`] closures of up to 12 parameters.
 ///
 ///
 /// # Safety
@@ -49,9 +45,6 @@ pub unsafe trait BlockFn: private::Sealed<Self::Args, Self::Output> {
 /// This is a sealed trait, and should not need to be implemented. Open an
 /// issue if you know a use-case where this restrition should be lifted!
 pub unsafe trait IntoBlock<'f, A, R>: private::Sealed<A, R>
-// where
-//     A: EncodeArguments,
-//    R: EncodeReturn,
 {
     /// The type-erased `dyn FnMut(...Args) -> R + 'f`.
     type Dyn: ?Sized + BlockFn<Args = A, Output = R>;
