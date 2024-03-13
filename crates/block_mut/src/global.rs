@@ -103,7 +103,7 @@ impl<F: ?Sized> fmt::Debug for GlobalBlock<F> {
 /// # Examples
 ///
 /// ```
-/// use block2::global_block;
+/// use block_mut::global_block;
 /// global_block! {
 ///     static MY_BLOCK = || -> i32 {
 ///         42
@@ -113,7 +113,7 @@ impl<F: ?Sized> fmt::Debug for GlobalBlock<F> {
 /// ```
 ///
 /// ```
-/// use block2::global_block;
+/// use block_mut::global_block;
 /// global_block! {
 ///     static ADDER_BLOCK = |x: i32, y: i32| -> i32 {
 ///         x + y
@@ -126,7 +126,7 @@ impl<F: ?Sized> fmt::Debug for GlobalBlock<F> {
 /// lifetimes involved.
 ///
 /// ```compile_fail
-/// use block2::global_block;
+/// use block_mut::global_block;
 /// global_block! {
 ///     pub static BLOCK_WITH_LIFETIME = |x: &i32| -> i32 {
 ///         *x + 42
@@ -142,7 +142,7 @@ impl<F: ?Sized> fmt::Debug for GlobalBlock<F> {
 /// can't due to implementation limitations:
 ///
 /// ```compile_fail
-/// use block2::global_block;
+/// use block_mut::global_block;
 /// global_block! {
 ///     pub static BLOCK<T: Encode> = |b: T| {};
 /// }

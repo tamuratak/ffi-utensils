@@ -9,7 +9,7 @@
 //! At a high level, this crate contains four types, each representing
 //! different kinds of blocks, and different kinds of ownership.
 //!
-//! | `block2` type                            | Equivalent Rust type  |
+//! | `block_mut` type                            | Equivalent Rust type  |
 //! | ---------------------------------------- | --------------------- |
 //! | `&Block<dyn FnMut() + 'a>`                  | `&dyn FnMut() + 'a`      |
 //! | `BoxBlock<dyn FnMut() + 'a>`                 | `Box<dyn FnMut() + 'a>`  |
@@ -49,7 +49,7 @@
 //! An `extern "C" { ... }` declaration for that function would then be:
 //!
 //! ```
-//! use block2::Block;
+//! use block_mut::Block;
 //!
 //! extern "C" {
 //!     fn check_addition(block: &Block<dyn FnMut(i32, i32) -> i32>);
@@ -67,7 +67,7 @@
 //! inside the function.
 //!
 //! ```
-//! use block2::Block;
+//! use block_mut::Block;
 //!
 //! #[no_mangle]
 //! extern "C" fn check_addition(block: &Block<dyn FnMut(i32, i32) -> i32>) {
@@ -89,9 +89,9 @@
 //! closure using [`BoxBlock::new`].
 //!
 //! ```
-//! use block2::BoxBlock;
+//! use block_mut::BoxBlock;
 //! #
-//! # extern "C" fn check_addition(block: &block2::Block<dyn FnMut(i32, i32) -> i32>) {
+//! # extern "C" fn check_addition(block: &block_mut::Block<dyn FnMut(i32, i32) -> i32>) {
 //! #     assert_eq!(block.call((5, 8)), 13);
 //! # }
 //!
@@ -107,9 +107,9 @@
 //! code is allowed to copy the block to the heap in the future.
 //!
 //! ```
-//! use block2::StackBlock;
+//! use block_mut::StackBlock;
 //! #
-//! # extern "C" fn check_addition(block: &block2::Block<dyn FnMut(i32, i32) -> i32>) {
+//! # extern "C" fn check_addition(block: &block_mut::Block<dyn FnMut(i32, i32) -> i32>) {
 //! #     assert_eq!(block.call((5, 8)), 13);
 //! # }
 //!
@@ -122,9 +122,9 @@
 //! static block.
 //!
 //! ```
-//! use block2::global_block;
+//! use block_mut::global_block;
 //! #
-//! # extern "C" fn check_addition(block: &block2::Block<dyn FnMut(i32, i32) -> i32>) {
+//! # extern "C" fn check_addition(block: &block_mut::Block<dyn FnMut(i32, i32) -> i32>) {
 //! #     assert_eq!(block.call((5, 8)), 13);
 //! # }
 //!
@@ -173,7 +173,7 @@
 //!
 //! ## Thread safety
 //!
-//! Thread-safe blocks are not yet representable in `block2`, and as such any
+//! Thread-safe blocks are not yet representable in `block_mut`, and as such any
 //! function that requires a thread-safe block must be marked `unsafe`.
 //!
 //!
@@ -236,7 +236,7 @@
 #![warn(clippy::missing_errors_doc)]
 #![warn(clippy::missing_panics_doc)]
 // Update in Cargo.toml as well.
-#![doc(html_root_url = "https://docs.rs/block2/0.4.0")]
+#![doc(html_root_url = "https://docs.rs/block_mut/0.4.0")]
 #![cfg_attr(feature = "unstable-docsrs", feature(doc_auto_cfg, doc_cfg_hide))]
 #![cfg_attr(feature = "unstable-docsrs", doc(cfg_hide(doc)))]
 
