@@ -1,4 +1,4 @@
-//! The documentation for these bindings is a mix from GNUStep's and Apple's
+//! The documentation for these bindings is a mix from Apple's
 //! sources, but the [ABI specification][ABI] is really the place you should
 //! be looking!
 //!
@@ -25,17 +25,7 @@ impl BlockFlags {
     const BLOCK_DEALLOCATING: Self = Self(0x0001);
 
     /// Note: Not public ABI.
-    const BLOCK_REFCOUNT_MASK: Self = Self(if cfg!(feature = "gnustep-1-7") {
-        // Mask for the reference count in byref structure's flags field. The low
-        // 3 bytes are reserved for the reference count, the top byte for the flags.
-        0x00ffffff
-    } else if cfg!(any(feature = "compiler-rt", feature = "unstable-objfw")) {
-        0xffff
-    } else if cfg!(feature = "apple") {
-        0xfffe // runtime
-    } else {
-        0
-    });
+    const BLOCK_REFCOUNT_MASK: Self = Self(0xfffe);
 
     /// Note: Not public ABI.
     const BLOCK_INLINE_LAYOUT_STRING: Self = Self(1 << 21);
