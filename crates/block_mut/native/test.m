@@ -5,3 +5,7 @@
 bool check_addition(int32_t a, int32_t b, int32_t (^add)(int32_t, int32_t)) {
     return add(a, b) == a + b;
 }
+
+bool check_addition2(int32_t a, int32_t b, int32_t (^add)(int32_t, int32_t)) {
+    return add(a, b) == a + b;
+}
