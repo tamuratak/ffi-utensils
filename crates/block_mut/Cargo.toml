@@ -21,14 +21,7 @@ license = "MIT"
 [features]
 # The default runtime is Apple's. Other platforms will probably error if the
 # correct feature flag is not specified.
-default = ["std", "apple"]
-
-# Currently not possible to turn off, put here for forwards compatibility.
-std = ["alloc", "objc2/std"]
-alloc = ["objc2/alloc"]
-
-# Link to Apple's libclosure (exists in libSystem).
-apple = ["objc2/apple"]
+default = []
 
 # Expose private ffi functions and statics.
 unstable-private = []
@@ -37,7 +30,7 @@ unstable-private = []
 unstable-docsrs = []
 
 [dependencies]
-objc2 = {version = "0.5.0", default-features = false }
+
 
 [package.metadata.docs.rs]
 default-target = "x86_64-apple-darwin"

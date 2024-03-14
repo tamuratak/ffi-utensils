@@ -217,7 +217,6 @@ mod tests {
         assert_eq!(MY_BLOCK.call(()), 42);
     }
 
-    #[cfg(feature = "apple")]
     const DEBUG_BLOCKFLAGS: &str = r#"BlockFlags {
         value: "00110000000000000000000000000000",
         deallocating: false,
@@ -232,19 +231,6 @@ mod tests {
         use_stret: true,
         has_signature: false,
         has_extended_layout: false,
-        over_referenced: false,
-        reference_count: 0,
-        ..
-    }"#;
-
-    #[cfg(not(feature = "apple"))]
-    const DEBUG_BLOCKFLAGS: &str = r#"BlockFlags {
-        value: "00110000000000000000000000000000",
-        has_copy_dispose: false,
-        has_ctor: false,
-        is_global: true,
-        use_stret: true,
-        has_signature: false,
         over_referenced: false,
         reference_count: 0,
         ..

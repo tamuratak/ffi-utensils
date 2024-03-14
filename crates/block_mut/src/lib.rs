@@ -247,9 +247,6 @@ extern crate std;
 #[doc = include_str!("../README.md")]
 extern "C" {}
 
-#[cfg(not(feature = "std"))]
-compile_error!("The `std` feature currently must be enabled.");
-
 // Link to `libclosure` (internally called `libsystem_blocks.dylib`), which is
 // exported by `libSystem.dylib`.
 //
@@ -259,9 +256,7 @@ compile_error!("The `std` feature currently must be enabled.");
 // Alternative: Only link to `libsystem_blocks.dylib`:
 // println!("cargo:rustc-link-search=native=/usr/lib/system");
 // println!("cargo:rustc-link-lib=dylib=system_blocks");
-#[cfg_attr(feature = "apple", link(name = "System", kind = "dylib"))]
-// Link to `libBlocksRuntime`.
-#[cfg_attr(feature = "compiler-rt", link(name = "BlocksRuntime", kind = "dylib"))]
+#[link(name = "System", kind = "dylib")]
 extern "C" {}
 
 mod abi;

@@ -14,7 +14,6 @@ pub struct Class {
     /// The size probably doesn't really matter here, as we only ever use the
     /// classes behind pointers, but let's import it with the correct size to
     /// be sure.
-    #[cfg(feature = "apple")]
     _priv: [*mut c_void; 32],
 
     /// Mark as `!Send + !Sync + !Unpin` and as mutable behind shared
@@ -73,63 +72,51 @@ extern "C" {
 #[cfg(any(test, feature = "unstable-private"))]
 pub mod private {
     use super::*;
-    #[cfg(any(doc, feature = "apple"))]
     use std::os::raw::c_char;
-    #[cfg(any(doc, feature = "apple"))]
     use std::os::raw::c_ulong;
 
     extern "C" {
         pub static _NSConcreteMallocBlock: Class;
-        #[cfg(any(doc, feature = "apple"))]
         pub static _NSConcreteAutoBlock: Class;
-        #[cfg(any(doc, feature = "apple"))]
         pub static _NSConcreteFinalizingBlock: Class;
-        #[cfg(any(doc, feature = "apple"))]
         pub static _NSConcreteWeakBlockVariable: Class;
 
-        #[cfg(any(doc, feature = "apple"))]
         pub fn Block_size(block: *mut c_void) -> c_ulong; // usize
 
         // Whether the return value of the block is on the stack.
         // macOS 10.7
-        #[cfg(any(doc, feature = "apple"))]
         pub fn _Block_use_stret(block: *mut c_void) -> bool;
 
         // Returns a string describing the block's GC layout.
         // This uses the GC skip/scan encoding.
         // May return NULL.
         // macOS 10.7
-        #[cfg(any(doc, feature = "apple"))]
         pub fn _Block_layout(block: *mut c_void) -> *const c_char;
 
         // Returns a string describing the block's layout.
         // This uses the "extended layout" form described above.
         // May return NULL.
         // macOS 10.8
-        #[cfg(any(doc, feature = "apple"))]
         pub fn _Block_extended_layout(block: *mut c_void) -> *const c_char;
 
         // Callable only from the ARR weak subsystem while in exclusion zone
         // macOS 10.7
-        #[cfg(any(doc, feature = "apple"))]
+
         pub fn _Block_tryRetain(block: *const c_void) -> bool;
 
         // Callable only from the ARR weak subsystem while in exclusion zone
         // macOS 10.7
-        #[cfg(any(doc, feature = "apple"))]
         pub fn _Block_isDeallocating(block: *const c_void) -> bool;
 
         // indicates whether block was compiled with compiler that sets the ABI
         // related metadata bits
         // macOS 10.7
-        #[cfg(any(doc, feature = "apple"))]
         pub fn _Block_has_signature(block: *mut c_void) -> bool;
 
         // Returns a string describing the block's parameter and return types.
         // The encoding scheme is the same as Objective-C @encode.
         // Returns NULL for blocks compiled with some compilers.
         // macOS 10.7
-        #[cfg(any(doc, feature = "apple"))]
         pub fn _Block_signature(block: *mut c_void) -> *const c_char;
     }
 }
