@@ -77,6 +77,25 @@ pub enum Entry {
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
     },
+    ObjCCategoryDecl {
+        name: Option<String>,
+        class_name: String,
+        properties: Vec<ObjCPropertyDecl>,
+        instance_methods: Vec<ObjCMethodDecl>,
+        class_methods: Vec<ObjCMethodDecl>,
+        platform_availability: Option<Vec<PlatformAvailability>>,
+        #[serde(with = "AvailabilityDef")]
+        availability: clang::Availability,
+    },
+    ObjCProtocolDecl {
+        name: String,
+        properties: Vec<ObjCPropertyDecl>,
+        instance_methods: Vec<ObjCMethodDecl>,
+        class_methods: Vec<ObjCMethodDecl>,
+        platform_availability: Option<Vec<PlatformAvailability>>,
+        #[serde(with = "AvailabilityDef")]
+        availability: clang::Availability,
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -109,6 +128,7 @@ pub struct ObjCMethodDecl {
     pub name: String,
     pub arguments: Vec<ParmDecl>,
     pub result_type: Typ,
+    pub optional: bool,
     pub platform_availability: Option<Vec<PlatformAvailability>>,
     #[serde(with = "AvailabilityDef")]
     pub availability: clang::Availability,
@@ -118,6 +138,7 @@ pub struct ObjCMethodDecl {
 pub struct ObjCPropertyDecl {
     pub name: String,
     pub objc_type: Typ,
+    pub optional: bool,
     pub attributes: Option<ObjCAttributes>,
     pub platform_availability: Option<Vec<PlatformAvailability>>,
     #[serde(with = "AvailabilityDef")]

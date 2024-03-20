@@ -63,14 +63,14 @@ impl HeaderFileTree {
         }
     }
 
-    pub fn from_root_header<F>(root_header: &Path, tu: &TranslationUnit, include: F) -> Self
+    pub fn from_root_header<F>(root_header: &Path, tu: &TranslationUnit, include_cb: F) -> Self
     where
         F: Fn(&Path) -> bool,
     {
         let mut tree = Self::new(root_header);
         tu.get_entity().get_children().iter().for_each(|entity| {
             if let Some(header_file_path) = get_file_location_path(entity) {
-                if tree.get(&header_file_path).is_none() && include(&header_file_path) {
+                if tree.get(&header_file_path).is_none() && include_cb(&header_file_path) {
                     if std::env::var("DEBUG").is_ok() {
                         eprintln!("Adding header file: {:?}", header_file_path)
                     }
