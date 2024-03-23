@@ -71,6 +71,9 @@ impl<'a> Parser<'a> {
             "-D",
             "__SWIFT_ATTR_SUPPORTS_SENDABLE_DECLS=1",
         ]);
+        if std::env::var("DEBUG").is_ok() {
+            eprintln!("Parser args: {:#?}", args);
+        }
         let tu = self
             .index
             .parser(filename)

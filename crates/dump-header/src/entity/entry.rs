@@ -95,7 +95,7 @@ pub enum Entry {
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
-    }
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -118,7 +118,6 @@ pub enum InitValue {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-
 pub struct InitListExpr {
     pub values: Vec<InitValue>,
 }
@@ -169,4 +168,3 @@ pub struct FieldDecl {
     pub name: String,
     pub objc_type: Typ,
 }
-
