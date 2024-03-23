@@ -44,7 +44,7 @@ impl<'a> Parser<'a> {
             .as_ref()
             .and_then(|std| std.to_possible_value())
             .map(|v| v.get_name().to_string());
-        if let Some(std_name) = std_name.as_ref() {
+        if let Some(std_name) = &std_name {
             args.push("-std");
             args.push(std_name);
         };
