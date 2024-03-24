@@ -37,7 +37,7 @@ pub enum Entry {
         availability: clang::Availability,
     },
     StructDecl {
-        name: String,
+        name: Option<String>,
         fields: Vec<Entry>,
         ty: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
@@ -49,8 +49,7 @@ pub enum Entry {
         ty: Typ,
     },
     UnionDecl {
-        name: String,
-        is_anonymous: bool,
+        name: Option<String>,
         ty: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]

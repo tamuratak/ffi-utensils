@@ -81,15 +81,22 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
             })
         }
         clang::EntityKind::StructDecl => Some(Entry::StructDecl {
-            name: name.unwrap(),
+            name: if !entity.is_anonymous_record_decl() {
+                name
+            } else {
+                None
+            },
             fields: get_fields(entity),
             ty: Typ::from(entity.get_type().unwrap()),
             platform_availability,
             availability,
         }),
         clang::EntityKind::UnionDecl => Some(Entry::UnionDecl {
-            name: name.unwrap(),
-            is_anonymous: entity.is_anonymous_record_decl(),
+            name: if !entity.is_anonymous_record_decl() {
+                name
+            } else {
+                None
+            },
             ty: Typ::from(entity.get_type().unwrap()),
             platform_availability,
             availability,

@@ -64,8 +64,8 @@ pub enum Typ {
         size: Option<usize>,
         is_const: bool,
     },
-    Record {
-        name: String,
+    StructRecord {
+        name: Option<String>,
         ident: Option<String>,
         fields: Vec<RecordField>,
         #[serde(with = "TypeKindDef")]
@@ -74,6 +74,17 @@ pub enum Typ {
         objc_encoding: Option<String>,
         is_const: bool,
     },
+    UnionRecord {
+        name: Option<String>,
+        ident: Option<String>,
+        fields: Vec<RecordField>,
+        #[serde(with = "TypeKindDef")]
+        clang_kind: clang::TypeKind,
+        nullability: Option<Nullability>,
+        objc_encoding: Option<String>,
+        is_const: bool,
+    },
+    // prevents infinite recursive loop for recursive struct
     RecordIdent {
         ident: String,
     },
@@ -169,7 +180,14 @@ impl Typ {
                 is_const,
             },
             TypeKind::Record => {
-                let ident = ty.get_declaration().and_then(|e| e.get_name());
+                let entity = ty.get_declaration().unwrap();
+                let is_anonymous = entity.is_anonymous_record_decl();
+                let ident = if !is_anonymous {
+                    entity.get_name()
+                } else {
+                    None
+                };
+                let name = if !is_anonymous { Some(name) } else { None };
                 if let Some(ref ident) = ident {
                     if memo.borrow().contains(ident) {
                         return Self::RecordIdent {
@@ -178,25 +196,38 @@ impl Typ {
                     }
                     memo.borrow_mut().insert(ident.clone());
                 }
-                Self::Record {
-                    name,
-                    ident,
-                    fields: ty
-                        .get_fields()
-                        .unwrap()
-                        .iter()
-                        .map(|e| RecordField {
-                            name: e.get_name(),
-                            is_anonymous: e
-                                .get_type()
-                                .and_then(|t| t.get_declaration().map(|e| e.is_anonymous_record_decl())),
-                            ty: Typ::from0(e.get_type().unwrap(), memo.clone()),
-                        })
-                        .collect(),
-                    clang_kind,
-                    nullability,
-                    objc_encoding,
-                    is_const,
+                let fields: Vec<RecordField> = ty
+                    .get_fields()
+                    .unwrap()
+                    .iter()
+                    .map(|e| RecordField {
+                        name: e.get_name(),
+                        is_anonymous: e.get_type().and_then(|t| {
+                            t.get_declaration().map(|e| e.is_anonymous_record_decl())
+                        }),
+                        ty: Typ::from0(e.get_type().unwrap(), memo.clone()),
+                    })
+                    .collect();
+                match entity.get_kind() {
+                    clang::EntityKind::StructDecl => Self::StructRecord {
+                        name,
+                        ident,
+                        fields,
+                        clang_kind,
+                        nullability,
+                        objc_encoding,
+                        is_const,
+                    },
+                    clang::EntityKind::UnionDecl => Self::UnionRecord {
+                        name,
+                        ident,
+                        fields,
+                        clang_kind,
+                        nullability,
+                        objc_encoding,
+                        is_const,
+                    },
+                    _ => panic!("unexpected entity kind: {:?}", entity.get_kind()),
                 }
             }
             TypeKind::ObjCClass

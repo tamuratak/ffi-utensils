@@ -2,6 +2,7 @@
 
 pub mod cli;
 pub mod entity;
+pub mod fixture;
 pub mod framework;
 pub mod headerfiletree;
 pub mod parser;
