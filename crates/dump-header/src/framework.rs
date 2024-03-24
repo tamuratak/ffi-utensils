@@ -1,7 +1,6 @@
 use clang::TranslationUnit;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use temp_dir::TempDir;
 
 use crate::{
     headerfiletree::{HeaderFile, HeaderFileTree},
@@ -65,10 +64,7 @@ impl<'a> FrameworkUnit<'a> {
 
     pub fn with_parser(name: &str, parser: &'a Parser) -> Result<Self, Box<dyn std::error::Error>> {
         let root_header = format!("#include <{}/{}.h>", name, name);
-        let dir = TempDir::new().unwrap();
-        let heder_file = dir.child("t.h");
-        std::fs::write(&heder_file, root_header)?;
-        let tu = parser.parse(&heder_file)?;
+        let tu = parser.parse_content(&root_header)?;
         let root_header = Self::get_root_header(&tu);
         let framework = Self::new(name.to_string(), root_header, tu);
         Ok(framework)

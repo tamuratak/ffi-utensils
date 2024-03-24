@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 
 use clang::{Clang, Index, SourceError, TranslationUnit};
 use clap::ValueEnum;
+use temp_dir::TempDir;
 
 use crate::cli::{Lang, Std};
 
@@ -89,5 +90,12 @@ impl<'a> Parser<'a> {
             .arguments(&args)
             .parse();
         tu
+    }
+
+    pub fn parse_content(&'a self, content: &str) -> Result<TranslationUnit<'a>, Box<dyn std::error::Error>> {
+        let dir = TempDir::new().unwrap();
+        let heder_file = dir.child("t.h");
+        std::fs::write(&heder_file, content)?;
+        Ok(self.parse(&heder_file)?)
     }
 }
