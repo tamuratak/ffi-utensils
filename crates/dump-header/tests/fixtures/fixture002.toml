@@ -1,0 +1,38 @@
+source = """
+struct s {
+    int a;
+};"""
+json = """
+[
+  {
+    "kind": "StructDecl",
+    "name": "s",
+    "fields": [],
+    "ty": {
+      "kind": "StructRecord",
+      "name": "struct s",
+      "ident": "s",
+      "fields": [
+        {
+          "name": "a",
+          "is_anonymous": null,
+          "ty": {
+            "kind": "OtherType",
+            "name": "int",
+            "clang_kind": "Int",
+            "nullability": null,
+            "objc_encoding": "i",
+            "is_const": false
+          }
+        }
+      ],
+      "clang_kind": "Record",
+      "nullability": null,
+      "objc_encoding": "{s=i}",
+      "is_const": false
+    },
+    "platform_availability": [],
+    "availability": "Available"
+  }
+]
+"""

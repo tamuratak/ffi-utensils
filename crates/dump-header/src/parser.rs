@@ -92,10 +92,13 @@ impl<'a> Parser<'a> {
         tu
     }
 
-    pub fn parse_content(&'a self, content: &str) -> Result<TranslationUnit<'a>, Box<dyn std::error::Error>> {
+    pub fn parse_content(
+        &'a self,
+        content: &str,
+    ) -> Result<(TranslationUnit<'a>, PathBuf), Box<dyn std::error::Error + Send + Sync + 'static>> {
         let dir = TempDir::new().unwrap();
         let heder_file = dir.child("t.h");
         std::fs::write(&heder_file, content)?;
-        Ok(self.parse(&heder_file)?)
+        Ok((self.parse(&heder_file)?, heder_file))
     }
 }

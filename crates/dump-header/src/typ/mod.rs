@@ -188,6 +188,7 @@ impl Typ {
                     None
                 };
                 let name = if !is_anonymous { Some(name) } else { None };
+                // prevents infinite recursive loop for recursive struct
                 if let Some(ref ident) = ident {
                     if memo.borrow().contains(ident) {
                         return Self::RecordIdent {

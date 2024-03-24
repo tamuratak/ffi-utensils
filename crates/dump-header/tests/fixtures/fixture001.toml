@@ -1,0 +1,85 @@
+source = """
+struct s {
+    union {
+        int a;
+    };
+};"""
+json = """
+[
+  {
+    "kind": "StructDecl",
+    "name": "s",
+    "fields": [
+      {
+        "kind": "UnionDecl",
+        "name": null,
+        "ty": {
+          "kind": "UnionRecord",
+          "name": null,
+          "ident": null,
+          "fields": [
+            {
+              "name": "a",
+              "is_anonymous": null,
+              "ty": {
+                "kind": "OtherType",
+                "name": "int",
+                "clang_kind": "Int",
+                "nullability": null,
+                "objc_encoding": "i",
+                "is_const": false
+              }
+            }
+          ],
+          "clang_kind": "Record",
+          "nullability": null,
+          "objc_encoding": "(?=i)",
+          "is_const": false
+        },
+        "platform_availability": [],
+        "availability": "Available"
+      }
+    ],
+    "ty": {
+      "kind": "StructRecord",
+      "name": "struct s",
+      "ident": "s",
+      "fields": [
+        {
+          "name": null,
+          "is_anonymous": true,
+          "ty": {
+            "kind": "UnionRecord",
+            "name": null,
+            "ident": null,
+            "fields": [
+              {
+                "name": "a",
+                "is_anonymous": null,
+                "ty": {
+                  "kind": "OtherType",
+                  "name": "int",
+                  "clang_kind": "Int",
+                  "nullability": null,
+                  "objc_encoding": "i",
+                  "is_const": false
+                }
+              }
+            ],
+            "clang_kind": "Record",
+            "nullability": null,
+            "objc_encoding": "(?=i)",
+            "is_const": false
+          }
+        }
+      ],
+      "clang_kind": "Record",
+      "nullability": null,
+      "objc_encoding": "{s=(?=i)}",
+      "is_const": false
+    },
+    "platform_availability": [],
+    "availability": "Available"
+  }
+]
+"""

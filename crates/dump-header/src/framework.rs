@@ -62,9 +62,12 @@ impl<'a> FrameworkUnit<'a> {
         &self.root_header
     }
 
-    pub fn with_parser(name: &str, parser: &'a Parser) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn with_parser(
+        name: &str,
+        parser: &'a Parser,
+    ) -> Result<Self, Box<dyn std::error::Error + Send + Sync + 'static>> {
         let root_header = format!("#include <{}/{}.h>", name, name);
-        let tu = parser.parse_content(&root_header)?;
+        let (tu, _) = parser.parse_content(&root_header)?;
         let root_header = Self::get_root_header(&tu);
         let framework = Self::new(name.to_string(), root_header, tu);
         Ok(framework)
