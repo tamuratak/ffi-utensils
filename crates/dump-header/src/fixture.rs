@@ -31,12 +31,14 @@ impl FixtureFile {
 
     fn save(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         let three_quotes = "\"\"\"";
-        let content =
-            if self.fixture.json.contains(three_quotes) || self.fixture.source.contains(three_quotes) {
-                toml::to_string_pretty(&self.fixture).unwrap()
-            } else {
-                format!(
-                    r##"source = """
+        let content = if self.fixture.json.contains(three_quotes)
+            || self.fixture.source.contains(three_quotes)
+        {
+            toml::to_string_pretty(&self.fixture).unwrap()
+        } else {
+            format!(
+                r##"
+source = """
 {}
 """
 
@@ -44,9 +46,11 @@ json = """
 {}
 """
 "##,
-                    &self.fixture.source.trim_end(), &self.fixture.json
-                )
-            };
+                &self.fixture.source, &self.fixture.json
+            )
+            .trim_start()
+            .to_string()
+        };
         std::fs::write(&self.file, content)?;
         Ok(())
     }
@@ -54,12 +58,28 @@ json = """
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Fixture {
-    pub source: String,
-    pub json: String,
+    source: String,
+    json: String,
 }
 
 impl Fixture {
+    pub fn new(source: &str, json: &str) -> Self {
+        Self {
+            source: source.trim().to_string(),
+            json: json.trim().to_string(),
+        }
+    }
+
+    pub fn source(&self) -> &str {
+        &self.source
+    }
+
+    pub fn json(&self) -> &str {
+        &self.json
+    }
+
     fn from(content: &str) -> Result<Self, toml::de::Error> {
-        toml::from_str(content)
+        let ret: Self = toml::from_str(content)?;
+        Ok(Self::new(&ret.source, &ret.json))
     }
 }
