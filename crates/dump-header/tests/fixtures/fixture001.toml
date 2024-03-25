@@ -3,7 +3,9 @@ struct s {
     union {
         int a;
     };
-};"""
+};
+"""
+
 json = """
 [
   {
@@ -13,6 +15,20 @@ json = """
       {
         "kind": "UnionDecl",
         "name": null,
+        "fields": [
+          {
+            "kind": "FieldDecl",
+            "name": "a",
+            "ty": {
+              "kind": "OtherType",
+              "name": "int",
+              "clang_kind": "Int",
+              "nullability": null,
+              "objc_encoding": "i",
+              "is_const": false
+            }
+          }
+        ],
         "ty": {
           "kind": "UnionRecord",
           "name": null,

@@ -97,9 +97,14 @@ pub fn convert_entity(entity: &clang::Entity) -> Option<Entry> {
             } else {
                 None
             },
+            fields: get_fields(entity),
             ty: Typ::from(entity.get_type().unwrap()),
             platform_availability,
             availability,
+        }),
+        clang::EntityKind::FieldDecl => Some(Entry::FieldDecl {
+            name: name.unwrap(),
+            ty: Typ::from(entity.get_type().unwrap()),
         }),
         clang::EntityKind::FunctionDecl => Some(Entry::FunctionDecl {
             name: name.unwrap(),

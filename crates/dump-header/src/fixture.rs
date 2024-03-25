@@ -37,12 +37,14 @@ impl FixtureFile {
             } else {
                 format!(
                     r##"source = """
-{}"""
+{}
+"""
+
 json = """
 {}
 """
 "##,
-                    &self.fixture.source, &self.fixture.json
+                    &self.fixture.source.trim_end(), &self.fixture.json
                 )
             };
         std::fs::write(&self.file, content)?;

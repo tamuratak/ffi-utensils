@@ -1,13 +1,28 @@
 source = """
 struct s {
     int a;
-};"""
+};
+"""
+
 json = """
 [
   {
     "kind": "StructDecl",
     "name": "s",
-    "fields": [],
+    "fields": [
+      {
+        "kind": "FieldDecl",
+        "name": "a",
+        "ty": {
+          "kind": "OtherType",
+          "name": "int",
+          "clang_kind": "Int",
+          "nullability": null,
+          "objc_encoding": "i",
+          "is_const": false
+        }
+      }
+    ],
     "ty": {
       "kind": "StructRecord",
       "name": "struct s",

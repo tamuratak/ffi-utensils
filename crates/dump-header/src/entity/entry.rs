@@ -44,16 +44,17 @@ pub enum Entry {
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
     },
-    FieldDecl {
-        name: String,
-        ty: Typ,
-    },
     UnionDecl {
         name: Option<String>,
+        fields: Vec<Entry>,
         ty: Typ,
         platform_availability: Option<Vec<PlatformAvailability>>,
         #[serde(with = "AvailabilityDef")]
         availability: clang::Availability,
+    },
+    FieldDecl {
+        name: String,
+        ty: Typ,
     },
     FunctionDecl {
         name: String,

@@ -7,7 +7,7 @@ use crate::{
     parser::Parser,
 };
 
-static FRAMEWORKS: &[&str] = &["Foundation", "UIKit"];
+// static FRAMEWORKS: &[&str] = &["Foundation", "UIKit"];
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Framework {
