@@ -2,8 +2,21 @@
 name = "dump-header"
 version = "0.1.0"
 edition = "2021"
+default-run = "dump-header"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = []
+dev = ["dep:toml"]
+
+[[bin]]
+name = "update-fixtures"
+required-features = ["dev"]
+
+[[test]]
+name = "test_objc"
+required-features = ["dev"]
 
 [dependencies]
 clang = { version = "2.0", features = ["runtime", "clang_10_0"] }
@@ -12,7 +25,7 @@ clap = { version = "4.5.3", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0"
 temp-dir = "0.1.12"
-toml = "0.8.12"
+toml = { version = "0.8.12", optional = true }
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"

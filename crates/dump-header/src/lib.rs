@@ -1,5 +1,6 @@
 pub mod cli;
 pub mod entity;
+#[cfg(feature = "dev")]
 pub mod fixture;
 pub mod framework;
 pub mod headerfiletree;
@@ -8,7 +9,6 @@ pub mod typ;
 pub mod utils;
 
 // TODO
-// - readable_flat_toml
 // - add more tests
 // - framework
 //   - sdk path
