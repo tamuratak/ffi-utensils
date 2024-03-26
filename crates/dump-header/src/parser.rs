@@ -53,9 +53,11 @@ impl<'a> Parser<'a> {
             args.push("-isysroot");
             args.push(isysroot.to_str().unwrap());
         } else {
-            // TODO: Use https://crates.io/crates/apple-sdk
-            args.push("-isysroot");
-            args.push("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/");
+            if cfg!(target_os = "macos") {
+                // TODO: Use https://crates.io/crates/apple-sdk
+                args.push("-isysroot");
+                args.push("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/");
+            }
         }
         if let Lang::ObjC = self.config.lang {
             args.extend(vec![
