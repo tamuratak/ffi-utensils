@@ -30,27 +30,7 @@ impl FixtureFile {
     }
 
     fn save(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
-        let three_quotes = "\"\"\"";
-        let content = if self.fixture.json.contains(three_quotes)
-            || self.fixture.source.contains(three_quotes)
-        {
-            toml::to_string_pretty(&self.fixture).unwrap()
-        } else {
-            format!(
-                r##"
-source = """
-{}
-"""
-
-json = """
-{}
-"""
-"##,
-                &self.fixture.source, &self.fixture.json
-            )
-            .trim_start()
-            .to_string()
-        };
+        let content = self.fixture.to_toml_string_pretty();
         std::fs::write(&self.file, content)?;
         Ok(())
     }
@@ -81,5 +61,27 @@ impl Fixture {
     fn from(content: &str) -> Result<Self, toml::de::Error> {
         let ret: Self = toml::from_str(content)?;
         Ok(Self::new(&ret.source, &ret.json))
+    }
+
+    fn to_toml_string_pretty(&self) -> String {
+        let three_quotes = "\"\"\"";
+        if self.source.contains(three_quotes) || self.json.contains(three_quotes) {
+            toml::to_string_pretty(&self).unwrap()
+        } else {
+            format!(
+                r##"
+source = """
+{}
+"""
+
+json = """
+{}
+"""
+"##,
+                &self.source, &self.json
+            )
+            .trim_start()
+            .to_string()
+        }
     }
 }

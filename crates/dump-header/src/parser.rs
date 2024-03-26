@@ -52,12 +52,10 @@ impl<'a> Parser<'a> {
         if let Some(isysroot) = &self.config.isysroot {
             args.push("-isysroot");
             args.push(isysroot.to_str().unwrap());
-        } else {
-            if cfg!(target_os = "macos") {
-                // TODO: Use https://crates.io/crates/apple-sdk
-                args.push("-isysroot");
-                args.push("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/");
-            }
+        } else if cfg!(target_os = "macos") {
+            // TODO: Use https://crates.io/crates/apple-sdk
+            args.push("-isysroot");
+            args.push("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/");
         }
         if let Lang::ObjC = self.config.lang {
             args.extend(vec![
@@ -97,7 +95,8 @@ impl<'a> Parser<'a> {
     pub fn parse_content(
         &'a self,
         content: &str,
-    ) -> Result<(TranslationUnit<'a>, PathBuf), Box<dyn std::error::Error + Send + Sync + 'static>> {
+    ) -> Result<(TranslationUnit<'a>, PathBuf), Box<dyn std::error::Error + Send + Sync + 'static>>
+    {
         let dir = TempDir::new().unwrap();
         let heder_file = dir.child("t.h");
         std::fs::write(&heder_file, content)?;
