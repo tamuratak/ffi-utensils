@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use anyhow::Result;
 use clang::Clang;
 use clap::{Parser, Subcommand};
 use dump_header::{
@@ -63,10 +64,10 @@ enum Commands {
     Ast { file: PathBuf },
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+fn main() -> Result<()> {
     let cli = Cli::parse();
-    clang_sys::load()?;
-    let clang = Clang::new()?;
+    clang_sys::load().unwrap();
+    let clang = Clang::new().unwrap();
     let parser_config = ParserConfig {
         isysroot: cli.isysroot.clone(),
         lang: cli.lang,
@@ -77,17 +78,17 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
 
     match &cli.command {
         Commands::Dump { output, file } => {
-            let pwd = std::env::current_dir().unwrap();
-            let file = file.is_absolute().then(|| file.clone()).unwrap_or(pwd.join(file));
-            let tu = parser.parse(&file).unwrap();
+            let pwd = std::env::current_dir()?;
+            let file = file
+                .is_absolute()
+                .then(|| file.clone())
+                .unwrap_or(pwd.join(file));
+            let tu = parser.parse(&file)?;
             let header_file_entry = HeaderFile::from_path(&file, &tu);
             if let Some(output) = output {
-                header_file_entry.save(output).unwrap();
+                header_file_entry.save(output)?;
             } else {
-                println!(
-                    "{}",
-                    serde_json::to_string_pretty(&header_file_entry).unwrap()
-                );
+                println!("{}", serde_json::to_string_pretty(&header_file_entry)?);
             }
         }
         #[allow(unused_variables)]
@@ -95,7 +96,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
             println!("{:?}", FrameworkUnit::with_parser("Foundation", &parser)?);
         }
         Commands::Ast { file } => {
-            let tu = parser.parse(file).unwrap();
+            let tu = parser.parse(file)?;
             tu.get_entity().get_children().iter().for_each(|entity| {
                 if entity.is_in_main_file() {
                     pretty_print_entity(entity, 0);

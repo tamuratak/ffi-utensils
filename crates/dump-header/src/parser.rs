@@ -1,10 +1,13 @@
 use std::path::{Path, PathBuf};
 
-use clang::{Clang, Index, SourceError, TranslationUnit};
+use clang::{Clang, Index, TranslationUnit};
 use clap::ValueEnum;
 use temp_dir::TempDir;
 
-use crate::cli::{Lang, Std};
+use crate::{
+    cli::{Lang, Std},
+    error::Error,
+};
 
 pub struct Parser<'a> {
     index: Index<'a>,
@@ -27,7 +30,7 @@ impl<'a> Parser<'a> {
     // https://clang.llvm.org/docs/UsersManual.html
     // https://clang.llvm.org/docs/CommandGuide/clang.html
     // https://clang.llvm.org/docs/ClangCommandLineReference.html
-    pub fn parse(&'a self, filename: &Path) -> Result<TranslationUnit<'a>, SourceError> {
+    pub fn parse(&'a self, filename: &Path) -> Result<TranslationUnit<'a>, Error> {
         let mut args = vec![];
         args.push("-x");
         let lang = match self.config.lang {
@@ -51,7 +54,11 @@ impl<'a> Parser<'a> {
         };
         if let Some(isysroot) = &self.config.isysroot {
             args.push("-isysroot");
-            args.push(isysroot.to_str().unwrap());
+            args.push(
+                isysroot
+                    .to_str()
+                    .ok_or(Error::InvalidArgument("Invalid isysroot".to_string()))?,
+            );
         } else if cfg!(target_os = "macos") {
             // TODO: Use https://crates.io/crates/apple-sdk
             args.push("-isysroot");
@@ -89,17 +96,13 @@ impl<'a> Parser<'a> {
             .retain_excluded_conditional_blocks(true)
             .arguments(&args)
             .parse();
-        tu
+        tu.map_err(|e| Error::Source { source: e })
     }
 
-    pub fn parse_content(
-        &'a self,
-        content: &str,
-    ) -> Result<(TranslationUnit<'a>, PathBuf), Box<dyn std::error::Error + Send + Sync + 'static>>
-    {
-        let dir = TempDir::new().unwrap();
+    pub fn parse_content(&'a self, content: &str) -> Result<(TranslationUnit<'a>, PathBuf), Error> {
+        let dir = TempDir::new().map_err(|e| Error::Io { source: e })?;
         let heder_file = dir.child("t.h");
-        std::fs::write(&heder_file, content)?;
+        std::fs::write(&heder_file, content).map_err(|e| Error::Io { source: e })?;
         Ok((self.parse(&heder_file)?, heder_file))
     }
 }

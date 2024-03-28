@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use anyhow::Result;
 use clang::Clang;
 use dump_header::{
     fixture::{Fixture, FixtureFile},
@@ -7,9 +8,9 @@ use dump_header::{
     parser::{self, ParserConfig},
 };
 
-fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
-    clang_sys::load()?;
-    let clang = Clang::new()?;
+fn main() -> Result<()> {
+    clang_sys::load().unwrap();
+    let clang = Clang::new().unwrap();
     let parser_config = ParserConfig {
         isysroot: None,
         lang: dump_header::cli::Lang::ObjC,

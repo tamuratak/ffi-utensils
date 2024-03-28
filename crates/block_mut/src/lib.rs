@@ -237,8 +237,8 @@
 #![warn(clippy::missing_panics_doc)]
 // Update in Cargo.toml as well.
 #![doc(html_root_url = "https://docs.rs/block_mut/0.4.0")]
-#![cfg_attr(feature = "unstable-docsrs", feature(doc_auto_cfg, doc_cfg_hide))]
-#![cfg_attr(feature = "unstable-docsrs", doc(cfg_hide(doc)))]
+// #![cfg_attr(feature = "unstable-docsrs", feature(doc_auto_cfg, doc_cfg_hide))]
+// #![cfg_attr(feature = "unstable-docsrs", doc(cfg_hide(doc)))]
 
 extern crate alloc;
 extern crate std;

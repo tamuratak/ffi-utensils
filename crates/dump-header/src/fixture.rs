@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
+use crate::error::ErrorDev;
+
 #[derive(Debug)]
 pub struct FixtureFile {
     pub file: PathBuf,
@@ -9,10 +11,8 @@ pub struct FixtureFile {
 }
 
 impl FixtureFile {
-    pub fn from(
-        file: &PathBuf,
-    ) -> Result<Self, Box<dyn std::error::Error + Send + Sync + 'static>> {
-        let content = std::fs::read_to_string(file)?;
+    pub fn from(file: &PathBuf) -> Result<Self, ErrorDev> {
+        let content = std::fs::read_to_string(file).map_err(|e| ErrorDev::Io { source: e })?;
         let fixture = Fixture::from(&content)?;
         Ok(Self {
             file: file.clone(),
@@ -20,18 +20,15 @@ impl FixtureFile {
         })
     }
 
-    pub fn update(
-        &mut self,
-        fixture: &Fixture,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+    pub fn update(&mut self, fixture: &Fixture) -> Result<(), ErrorDev> {
         self.fixture = fixture.clone();
         self.save()?;
         Ok(())
     }
 
-    fn save(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
-        let content = self.fixture.to_toml_string_pretty();
-        std::fs::write(&self.file, content)?;
+    fn save(&self) -> Result<(), ErrorDev> {
+        let content = self.fixture.to_toml_string_pretty()?;
+        std::fs::write(&self.file, content).map_err(|e| ErrorDev::Io { source: e })?;
         Ok(())
     }
 }
@@ -58,17 +55,17 @@ impl Fixture {
         &self.json
     }
 
-    fn from(content: &str) -> Result<Self, toml::de::Error> {
-        let ret: Self = toml::from_str(content)?;
+    fn from(content: &str) -> Result<Self, ErrorDev> {
+        let ret: Self = toml::from_str(content).map_err(|x| ErrorDev::TomlDe { source: x })?;
         Ok(Self::new(&ret.source, &ret.json))
     }
 
-    fn to_toml_string_pretty(&self) -> String {
+    fn to_toml_string_pretty(&self) -> Result<String, ErrorDev> {
         let three_quotes = "\"\"\"";
         if self.source.contains(three_quotes) || self.json.contains(three_quotes) {
-            toml::to_string_pretty(&self).unwrap()
+            toml::to_string_pretty(&self).map_err(|e| ErrorDev::TomlSer { source: e })
         } else {
-            format!(
+            let ret = format!(
                 r##"
 source = """
 {}
@@ -81,7 +78,8 @@ json = """
                 &self.source, &self.json
             )
             .trim_start()
-            .to_string()
+            .to_string();
+            Ok(ret)
         }
     }
 }

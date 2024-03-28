@@ -1,5 +1,6 @@
 pub mod cli;
 pub mod entity;
+pub mod error;
 #[cfg(feature = "dev")]
 pub mod fixture;
 pub mod framework;
