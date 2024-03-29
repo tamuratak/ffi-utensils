@@ -3,7 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
 use crate::{
-    error::Error, headerfiletree::{HeaderFile, HeaderFileTree}, parser::Parser
+    error::Error,
+    headerfiletree::{HeaderFile, HeaderFileTree},
+    parser::Parser,
 };
 
 // static FRAMEWORKS: &[&str] = &["Foundation", "UIKit"];
@@ -61,10 +63,7 @@ impl<'a> FrameworkUnit<'a> {
         &self.root_header
     }
 
-    pub fn with_parser(
-        name: &str,
-        parser: &'a Parser,
-    ) -> Result<Self, Error> {
+    pub fn with_parser(name: &str, parser: &'a Parser) -> Result<Self, Error> {
         let root_header = format!("#include <{}/{}.h>", name, name);
         let (tu, _) = parser.parse_content(&root_header)?;
         let root_header = Self::get_root_header(&tu);
