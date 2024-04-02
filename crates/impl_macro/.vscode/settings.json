@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.procMacro.ignored": {
+        "impl_macro": "impl_protocol"
+    }
+}
